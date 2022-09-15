@@ -1,3 +1,12 @@
+""" Methods for running discretised FBA
+
+:Author: Yin Hoon Chew <yinhoon.chew@bham.ac.uk>
+:Author: Alexandra Anamaria-Sorinca
+:Date: 13-09-2022
+:License: MIT
+
+"""
+
 import cobra
 import re
 import numpy as np
