@@ -8,21 +8,32 @@
 """
 
 import cobra
-import re
 import numpy as np
-from numpy import matrix
-from numpy import linalg
-import openpyxl
-cobra_config = cobra.Configuration()
-from cobra import Model, Reaction, Metabolite
-from cobra.util.solver import linear_reaction_coefficients
-from cobra.io import load_model
-from cobra.flux_analysis import gapfill
-from openpyxl import load_workbook
-from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
-model = load_model("textbook")
 
+
+class DiscretisedCell(object):
+    """ A class of discretised cell objects. Each cell object has a 2D regular shape 
+        defined by an MxN matrix that represents the cell's width (M) and length (N) 
+    """
+    def __init__(self, cell_id, width, length):
+        """ 
+        Args:
+            id (:obj:`str`): cell ID
+            width (:obj:`int`): cell width
+            length (:obj:`int`): cell length
+
+        Raises:
+            :obj:`TypeError`: if the width and/or length is not an integer    
+        """
+
+        if not isinstance(width, int):
+            raise TypeError('width must be an integer')
+        if not isinstance(length, int):
+            raise TypeError('length must be an integer')    
+
+        self.id = cell_id
+        self.width = width
+        self.length = length
 
 #create the shape of the cell in a matrix form
 #the row size * the column size = the number of cell compartiments
