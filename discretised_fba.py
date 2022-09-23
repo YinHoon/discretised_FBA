@@ -34,6 +34,124 @@ class DiscretisedCell(object):
         self.id = cell_id
         self.width = width
         self.length = length
+        self.regions = np.empty((self.width, self.length), dtype=np.object)
+        for i in range(self.width):
+            for j in range(self.length):
+                new_region = Region(i, j)
+                self.regions[i, j] = new_region    
+
+    def create_reactions(self, extra_mets, intra_mets, extra_rxns, intra_rxns, 
+            extra_intra_rxns, obj_rxn_id):
+        """ Create a Cobra model and add reactions to each region
+
+        Args:
+            extra_mets (:obj:`list` of :obj:`str`): list of IDs of metabolites 
+                in the extracellular space
+            intra_mets (:obj:`list` of :obj:`str`): list of IDs of metabolites 
+                in the intracellular space
+            extra_rxns (:obj:`dict`): dictionary of reaction ID as key and reaction
+                string (e.g. '2 A --> B') as value, for reactions in the extracellular
+                space
+            intra_rxns (:obj:`dict`): dictionary of reaction ID as key and reaction
+                string (e.g. '2 A --> B') as value, for reactions in the intracellular
+                space
+            extra_intra_rxns (:obj:`dict`): dictionary of reaction ID as key and 
+                reaction string (e.g. '2 A --> B') as value, for transport reactions 
+                between the extracellular and intracellular space   
+            obj_rxn_id (:obj:`str`): ID of objective reaction
+            
+        Raises:
+            :obj:`KeyError`: if objective reaction ID is not in the
+                extracellular, intracellular or transport reaction IDs            
+        """
+        all_reaction_ids = list(extra_rxns.keys()) + \
+            list(intra_rxns.keys()) + list(extra_intra_rxns.keys())
+        if obj_rxn_id not in all_reaction_ids:
+            raise KeyError(
+                'obj_rxn_id is not an existing reaction')
+
+        self.model = cobra.Model()
+        
+        # create metabolites in the extracellular compartment
+        metabolite_objs = []
+        for i in extra_mets:
+            metabolite_objs.append(cobra.Metabolite(i))
+        self.model.add_metabolites(metabolite_objs)           
+        
+        # create reactions in the extracellular compartment
+        reaction_objs = []
+        for k in extra_rxns.keys():
+            rxn_obj = cobra.Reaction(k)
+            reaction_objs.append(rxn_obj)
+        self.model.add_reactions(reaction_objs)    
+        for rxn_obj in reaction_objs:
+            rxn_obj.reaction = extra_rxns[rxn_obj.id]                    
+        
+        # create intracellular metabolites and reactions for each discrete region
+        metabolite_objs = []
+        for row in self.regions:
+            for region in row:
+                for i in intra_mets:
+                    region_metabolite = cobra.Metabolite(f'{i}_{region.id}')
+                    metabolite_objs.append(region_metabolite)
+                    region.add_metabolite(region_metabolite)    
+        self.model.add_metabolites(metabolite_objs)
+
+        # create intracellular reactions for each discrete region
+        for row in self.regions:
+            for region in row:
+                for k, v in intra_rxns.items():
+                    region_rxn = cobra.Reaction(f'{k}_{region.id}')                    
+                    region.add_reaction(region_rxn)
+                    self.model.add_reactions([region_rxn])
+                    new_rxn_str = v 
+                    for i in intra_mets:
+                        if i in new_rxn_str:
+                            new_rxn_str = new_rxn_str.replace(i, f'{i}_{region.id}')
+                    region_rxn.reaction = new_rxn_str
+            
+
+class Region(object):
+    """ A class of objects where each object represents a region on a cell.
+        Each region occupies a space on a square lattice grid that is represented
+        as a matrix. The position of each region is represented by its row and column 
+        number on the matrix.
+    """
+    def __init__(self, row_number, column_number):
+        """ 
+        Args:
+            row_number (:obj:`int`): row number
+            column_number (:obj:`int`): column number
+
+        Raises:
+            :obj:`TypeError`: if the row and/or column number is not an integer    
+        """
+        if not isinstance(row_number, int):
+            raise TypeError('row_number must be an integer')
+        if not isinstance(column_number, int):
+            raise TypeError('column_number must be an integer')    
+
+        self.row_number = row_number
+        self.column_number = column_number
+        self.id = f'{row_number},{column_number}'
+        self.metabolites = {}
+        self.reactions = {}
+
+    def add_metabolite(self, metabolite):
+        """ Add a metabolite to the region
+
+        Args:
+            metabolite (:obj:`cobra.Metabolite`): a metabolite object
+        """
+        self.metabolites[metabolite.id] = metabolite
+
+    def add_reaction(self, reaction):
+        """ Add a metabolite to the region
+
+        Args:
+            metabolite (:obj:`cobra.Reaction`): a reaction object
+        """
+        self.reactions[reaction.id] = reaction    
 
 #create the shape of the cell in a matrix form
 #the row size * the column size = the number of cell compartiments
@@ -195,43 +313,3 @@ def run_model(r_size, c_size, enzyme):
     print({k:v.flux for k,v in react.items()})
 
     return solution, react
-
-wb = load_workbook(filename = "C:\\Users\\Lenovo\\PycharmProjects\\systems_biology.xlsx")
-wb_out = Workbook()
-dest_filename = "C:\\Users\\Lenovo\\PycharmProjects\\results.xlsx"
-sheet_name =[ "Model 1 Cell 1", "Model 1 Cell 2", "Model 1 Cell 3",
-              "Model 2 Cell 1", "Model 2 Cell 2", "Model 2 Cell 3",
-             "Model 3 Cell 1", "Model 3 Cell 2", "Model 3 Cell 3",
-             "Model 4 Cell 1", "Model 4 Cell 2","Model 4 Cell 3",
-             "Model 5 Cell 1", "Model 5 Cell 2","Model 5 Cell 3",
-             "Model 6 Cell 1", "Model 6 Cell 2", "Model 6 Cell 3",
-             "Model 7 Cell 1", "Model 7 Cell 2", "Model 7 Cell 3",
-             "Model 8 Cell 1", "Model 8 Cell 2", "Model 8 Cell 3",
-             "Model 9 Cell 1", "Model 9 Cell 2","Model 9 Cell 3",
-             "Model 10 Cell 1", "Model 10 Cell 2","Model 10 Cell 3",
-             "Model 11 Cell 1", "Model 11 Cell 2", "Model 11 Cell 3",
-             "Model 12 Cell 1", "Model 12 Cell 2", "Model 12 Cell 3"]
-
-results = {}
-for i in sheet_name:
-    sheet_ranges = wb[i]
-    enzyme_dist = {}
-    for row in range (6,36):
-        enzyme_dist[sheet_ranges.cell(column=2,row=row).value] = sheet_ranges.cell(column=3,row=row).value
-    for row in range (39,69):
-        enzyme_dist[sheet_ranges.cell(column=2, row=row).value] = sheet_ranges.cell(column=3, row=row).value
-    r_size = sheet_ranges.cell(column=3,row=2).value
-    c_size = sheet_ranges.cell(column=3, row=3).value
-    sol, fluxes = run_model(r_size, c_size, enzyme_dist)
-    results[i] = [sol, fluxes]
-
-    # Write to excel file
-    ws = wb_out.create_sheet(title=i)
-    row = 1
-    for k,v in fluxes.items():
-        ws['A' + str(row)] = k
-        ws['B' + str(row)] = v.flux
-        row += 1
-    ws['A' + str(row)] = 'Solution'
-    ws['B' + str(row)] = sol.objective_value
-wb_out.save(filename = dest_filename)
