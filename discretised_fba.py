@@ -35,13 +35,14 @@ class DiscretisedCell(object):
         self.width = width
         self.length = length
         self.regions = np.empty((self.width, self.length), dtype=np.object)
+        self.model = cobra.Model()
         for i in range(self.width):
             for j in range(self.length):
                 new_region = Region(i, j)
                 self.regions[i, j] = new_region    
 
     def create_reactions(self, extra_mets, intra_mets, extra_rxns, intra_rxns, 
-            extra_intra_rxns, obj_rxn_id):
+            obj_rxn_id):
         """ Create a Cobra model and add reactions to each region
 
         Args:
@@ -55,22 +56,15 @@ class DiscretisedCell(object):
             intra_rxns (:obj:`dict`): dictionary of reaction ID as key and reaction
                 string (e.g. '2 A --> B') as value, for reactions in the intracellular
                 space
-            extra_intra_rxns (:obj:`dict`): dictionary of reaction ID as key and 
-                reaction string (e.g. '2 A --> B') as value, for transport reactions 
-                between the extracellular and intracellular space   
             obj_rxn_id (:obj:`str`): ID of objective reaction
             
         Raises:
             :obj:`KeyError`: if objective reaction ID is not in the
                 extracellular, intracellular or transport reaction IDs            
         """
-        all_reaction_ids = list(extra_rxns.keys()) + \
-            list(intra_rxns.keys()) + list(extra_intra_rxns.keys())
-        if obj_rxn_id not in all_reaction_ids:
+        if obj_rxn_id not in list(intra_rxns.keys()):
             raise KeyError(
                 'obj_rxn_id is not an existing reaction')
-
-        self.model = cobra.Model()
         
         # create metabolites in the extracellular compartment
         metabolite_objs = []
@@ -87,7 +81,7 @@ class DiscretisedCell(object):
         for rxn_obj in reaction_objs:
             rxn_obj.reaction = extra_rxns[rxn_obj.id]                    
         
-        # create intracellular metabolites and reactions for each discrete region
+        # create intracellular metabolites for each discrete region
         metabolite_objs = []
         for row in self.regions:
             for region in row:
@@ -109,6 +103,33 @@ class DiscretisedCell(object):
                         if i in new_rxn_str:
                             new_rxn_str = new_rxn_str.replace(i, f'{i}_{region.id}')
                     region_rxn.reaction = new_rxn_str
+
+    def create_transport_reactions(self, intra_mets, extra_intra_rxns):
+        """ Add nutrient transport reactions
+
+        Args:
+            intra_mets (:obj:`list` of :obj:`str`): list of IDs of intracellular 
+                metabolites that are transported from the extracellular space
+            extra_intra_rxns (:obj:`dict`): dictionary of reaction ID as key and 
+                reaction string (e.g. '2 A --> B') as value, for transport reactions 
+                between the extracellular and intracellular space   
+        """
+        # transport reactions between the extracellular and intracellular space
+        x,y = np.ogrid[0:self.width, 0:self.length]
+        # retrieve the inner layer
+        inner_layer = (x>0)&(x<self.width-1)&(y>0)&(y<self.length-1)
+        # create transport reaction to outer layer
+        for region in self.regions[~inner_layer]:
+            for k, v in extra_intra_rxns.items():
+                region_rxn = cobra.Reaction(f'{k}_{region.id}')                    
+                region.add_reaction(region_rxn)
+                self.model.add_reactions([region_rxn])
+                new_rxn_str = v 
+                for i in intra_mets:
+                    if i in new_rxn_str:
+                        new_rxn_str = new_rxn_str.replace(i, f'{i}_{region.id}')
+                region_rxn.reaction = new_rxn_str
+
             
 
 class Region(object):

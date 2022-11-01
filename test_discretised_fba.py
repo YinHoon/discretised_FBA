@@ -39,12 +39,11 @@ class CellTestCase(unittest.TestCase):
             'R_biomass': '2 B[c] --> Biomass[c]', # biomass reaction
             'R_biomass_ex': 'Biomass[c] -->  ' # biomass exchange reaction
             }
-        extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'}     
         obj_rxn_id = 'R_biomass_ex'
 
         cell = DiscretisedCell('good_cell', 1, 2)
         cell.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
-            extra_intra_rxns, obj_rxn_id)
+            obj_rxn_id)
 
         test_metabolites = ['A[e]', 'A[c]_0,0', 'A[c]_0,1', 'B[c]_0,0', 
             'B[c]_0,1', 'Biomass[c]_0,0', 'Biomass[c]_0,1']
@@ -66,10 +65,30 @@ class CellTestCase(unittest.TestCase):
         obj_rxn_id = 'bad_obj_reaction'
         with self.assertRaises(KeyError) as error:
             bad_cell1.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
-                extra_intra_rxns, obj_rxn_id)
+                obj_rxn_id)
             self.assertEqual(error.exception.message, 
-                'obj_rxn_id is not an existing reaction')
+                'obj_rxn_id is not an existing reaction')        
+
+    def test_create_transport_reactions(self):
+        intra_mets = ['A[c]']
+        extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'}
         
+        cell = DiscretisedCell('good_cell', 3, 4)
+        cell.create_transport_reactions(intra_mets, extra_intra_rxns)
+
+        test_reactions = {
+            'R_trans_0,0': 'A[e] --> A[c]_0,0', 
+            'R_trans_0,1': 'A[e] --> A[c]_0,1',
+            'R_trans_0,2': 'A[e] --> A[c]_0,2',
+            'R_trans_0,3': 'A[e] --> A[c]_0,3',
+            'R_trans_1,0': 'A[e] --> A[c]_1,0',
+            'R_trans_1,3': 'A[e] --> A[c]_1,3',
+            'R_trans_2,0': 'A[e] --> A[c]_2,0',
+            'R_trans_2,1': 'A[e] --> A[c]_2,1',
+            'R_trans_2,2': 'A[e] --> A[c]_2,2',
+            'R_trans_2,3': 'A[e] --> A[c]_2,3',
+            }
+        self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)    
 
 class RegionTestCase(unittest.TestCase):
     def test_init(self):
