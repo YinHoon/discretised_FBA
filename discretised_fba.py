@@ -104,6 +104,13 @@ class DiscretisedCell(object):
                             new_rxn_str = new_rxn_str.replace(i, f'{i}_{region.id}')
                     region_rxn.reaction = new_rxn_str
 
+        # Set objective function
+        objective_reactions = [rxn.flux_expression for rxn in self.model.reactions 
+            if obj_rxn_id in rxn.id]
+        objective_function = self.model.problem.Objective(sum(objective_reactions),
+            direction='max')
+        self.model.objective = objective_function
+
     def create_transport_reactions(self, intra_mets, extra_intra_rxns):
         """ Add nutrient transport reactions
 

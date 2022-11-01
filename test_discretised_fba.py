@@ -61,6 +61,10 @@ class CellTestCase(unittest.TestCase):
             }
         self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)
 
+        self.assertEqual(str(cell.model.objective.expression), 
+            '1.0*R_biomass_ex_0,0 - 1.0*R_biomass_ex_0,0_reverse_db2c7 + ' +
+            '1.0*R_biomass_ex_0,1 - 1.0*R_biomass_ex_0,1_reverse_f5050')
+
         bad_cell1 = DiscretisedCell('bad_cell1', 1, 2)
         obj_rxn_id = 'bad_obj_reaction'
         with self.assertRaises(KeyError) as error:
