@@ -92,7 +92,36 @@ class CellTestCase(unittest.TestCase):
             'R_trans_2,2': 'A[e] --> A[c]_2,2',
             'R_trans_2,3': 'A[e] --> A[c]_2,3',
             }
-        self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)    
+        self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)
+
+    def test_create_diffusion(self):
+        
+        intra_mets = ['A[c]']
+        cell = DiscretisedCell('test_cell', 3, 4)
+        cell.create_diffusion(intra_mets)
+
+        diffusion_region_0_0 = {
+            'A[c]_0,0_to_0,1': 'A[c]_0,0 --> A[c]_0,1',
+            'A[c]_0,0_to_1,0': 'A[c]_0,0 --> A[c]_1,0',
+            'A[c]_0,0_to_1,1': 'A[c]_0,0 --> A[c]_1,1',
+            'A[c]_0,1_to_0,0': 'A[c]_0,1 --> A[c]_0,0',
+            'A[c]_1,0_to_0,0': 'A[c]_1,0 --> A[c]_0,0',
+            'A[c]_1,1_to_0,0': 'A[c]_1,1 --> A[c]_0,0',
+            }
+        self.assertEqual({k:v.reaction for k, v in cell.regions[0,0].reactions.items()}, 
+            diffusion_region_0_0)             
+
+    def test_get_neighbouring_regions(self):
+        cell = DiscretisedCell('good_cell', 3, 4)
+
+        self.assertEqual(sorted(cell.get_neighbouring_regions(0,0)), 
+            sorted([(0,1), (1,0), (1,1)]))
+        self.assertEqual(sorted(cell.get_neighbouring_regions(0,1)), 
+            sorted([(0,0), (0,2), (1,0), (1,1), (1,2)]))
+        self.assertEqual(sorted(cell.get_neighbouring_regions(1,0)), 
+            sorted([(0,0), (0,1), (1,1), (2,0), (2,1)]))
+        self.assertEqual(sorted(cell.get_neighbouring_regions(1,1)), 
+            sorted([(0,0), (0,1), (0,2), (1,0), (1,2), (2,0), (2,1), (2,2)]))      
 
 class RegionTestCase(unittest.TestCase):
     def test_init(self):

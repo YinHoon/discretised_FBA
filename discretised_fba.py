@@ -7,6 +7,7 @@
 
 """
 
+from itertools import product, starmap
 import cobra
 import numpy as np
 
@@ -123,9 +124,9 @@ class DiscretisedCell(object):
         """
         # transport reactions between the extracellular and intracellular space
         x,y = np.ogrid[0:self.width, 0:self.length]
-        # retrieve the inner layer
+        # retrieve the inner layers
         inner_layer = (x>0)&(x<self.width-1)&(y>0)&(y<self.length-1)
-        # create transport reaction to outer layer
+        # create transport reaction into the outermost layer
         for region in self.regions[~inner_layer]:
             for k, v in extra_intra_rxns.items():
                 region_rxn = cobra.Reaction(f'{k}_{region.id}')                    
@@ -136,7 +137,44 @@ class DiscretisedCell(object):
                     if i in new_rxn_str:
                         new_rxn_str = new_rxn_str.replace(i, f'{i}_{region.id}')
                 region_rxn.reaction = new_rxn_str
+        
+    def create_diffusion(self, intra_mets):
+        """ Add nutrient diffusion between neighbouring regions
 
+        Args:
+            intra_mets (:obj:`list` of :obj:`str`): list of IDs of intracellular 
+                metabolites that diffuse in the cell
+        """
+        for row in self.regions:
+            for region in row:
+                neighbours = self.get_neighbouring_regions(
+                    region.row_number, region.column_number)
+                for neighbour in neighbours:
+                    neighbour_region = self.regions[neighbour[0], neighbour[1]]
+                    for i in intra_mets:            
+                        region_rxn = cobra.Reaction(
+                            f'{i}_{region.id}_to_{neighbour_region.id}')                    
+                        region.add_reaction(region_rxn)
+                        neighbour_region.add_reaction(region_rxn)
+                        self.model.add_reactions([region_rxn])
+                        region_rxn.reaction = \
+                            f'{i}_{region.id} --> {i}_{neighbour_region.id}'                
+
+    def get_neighbouring_regions(self, row_index, col_index):
+        """ Return the all the neighbours of a region
+
+        Args:
+            row_index (:obj:`int`): row index of the region
+            col_index (:obj:`int`): column index of the region
+
+        Returns:
+            :obj:`list`: list of row and column indices of all neighbours     
+        """         
+        height, width = len(self.regions), len(self.regions[0])
+        neighbours = list(starmap(lambda a, b: (row_index + a, col_index + b), product((0, -1, +1), (0, -1, +1))))
+        neighbours.pop(0) #  exclude region of interest
+        neighbours = list(filter(lambda cell: cell[0] in range(height) and cell[1] in range(width), neighbours))
+        return neighbours
             
 
 class Region(object):
