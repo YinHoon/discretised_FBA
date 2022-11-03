@@ -19,10 +19,10 @@ class CellTestCase(unittest.TestCase):
         self.assertEqual(cell.width, 3)
         self.assertEqual(cell.length, 2)
         self.assertEqual(cell.regions.size, 6)
-        self.assertEqual(len(cell.regions), 3)
+        self.assertEqual(len(cell.regions), 2)
         self.assertEqual(all(isinstance(i, Region) for j in cell.regions for i in j), True)
         self.assertEqual(sorted([i.id for j in cell.regions for i in j]), 
-            sorted(['0,0', '0,1', '1,0', '1,1', '2,0', '2,1']))
+            sorted(['0,0', '0,1', '0,2', '1,0', '1,1', '1,2']))
 
         with self.assertRaises(TypeError) as error:
             bad_cell1 = DiscretisedCell('bad_cell1', 0.2, 2)
@@ -41,7 +41,7 @@ class CellTestCase(unittest.TestCase):
             }
         obj_rxn_id = 'R_biomass_ex'
 
-        cell = DiscretisedCell('good_cell', 1, 2)
+        cell = DiscretisedCell('good_cell', 2, 1)
         cell.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
             obj_rxn_id)
 
@@ -77,7 +77,7 @@ class CellTestCase(unittest.TestCase):
         intra_mets = ['A[c]']
         extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'}
         
-        cell = DiscretisedCell('good_cell', 3, 4)
+        cell = DiscretisedCell('good_cell', 4, 3)
         cell.create_transport_reactions(intra_mets, extra_intra_rxns)
 
         test_reactions = {
@@ -108,7 +108,7 @@ class CellTestCase(unittest.TestCase):
             'A[c]_1,0_to_0,0': 'A[c]_1,0 --> A[c]_0,0',
             'A[c]_1,1_to_0,0': 'A[c]_1,1 --> A[c]_0,0',
             }
-        self.assertEqual({k:v.reaction for k, v in cell.regions[0,0].reactions.items()}, 
+        self.assertEqual({k:v.reaction for k, v in cell.regions[0,0].diffusions.items()}, 
             diffusion_region_0_0)             
 
     def test_get_neighbouring_regions(self):
@@ -146,4 +146,10 @@ class RegionTestCase(unittest.TestCase):
         rxn = cobra.Reaction('R')
         region = Region(1, 2)
         region.add_reaction(rxn)
-        self.assertEqual(region.reactions, {'R': rxn})                   
+        self.assertEqual(region.reactions, {'R': rxn})
+
+    def test_add_diffusion(self):
+        rxn = cobra.Reaction('R')
+        region = Region(1, 2)
+        region.add_diffusion(rxn)
+        self.assertEqual(region.diffusions, {'R': rxn})                     
