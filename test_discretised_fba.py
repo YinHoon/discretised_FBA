@@ -121,7 +121,43 @@ class CellTestCase(unittest.TestCase):
         self.assertEqual(sorted(cell.get_neighbouring_regions(1,0)), 
             sorted([(0,0), (0,1), (1,1), (2,0), (2,1)]))
         self.assertEqual(sorted(cell.get_neighbouring_regions(1,1)), 
-            sorted([(0,0), (0,1), (0,2), (1,0), (1,2), (2,0), (2,1), (2,2)]))      
+            sorted([(0,0), (0,1), (0,2), (1,0), (1,2), (2,0), (2,1), (2,2)]))
+
+    def test_set_bounds(self):
+        extra_mets = ['A[e]']
+        intra_mets = ['A[c]', 'B[c]', 'Biomass[c]']
+        extra_rxns = {'R_A_ex': ' --> A[e]'}        
+        intra_rxns = {
+            'R_syn': 'A[c] --> B[c]', # synthesis reaction
+            'R_biomass': '2 B[c] --> Biomass[c]', # biomass reaction
+            'R_biomass_ex': 'Biomass[c] -->  ' # biomass exchange reaction
+            }
+        extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'}    
+        obj_rxn_id = 'R_biomass_ex'
+
+        cell = DiscretisedCell('good_cell', 4, 3)
+        cell.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
+            obj_rxn_id)
+        cell.create_transport_reactions(['A[c]'], extra_intra_rxns)
+        cell.create_diffusion(['A[c]'])
+        rxn_bounds = {}
+        diff_bounds = {}
+        for x in cell.regions:
+            for region in x:
+                for rxn in region.reactions.values():
+                    rxn_bounds[rxn.id] = (0, 10.)
+                for diff in region.diffusions.values():
+                    diff_bounds[diff.id] = (0, 5.)
+        rxn_bounds['R_A_ex'] = (0, 10.)               
+        cell.set_bounds(rxn_bounds, diff_bounds)
+
+        self.assertEqual({i.id:i.bounds for i in cell.model.reactions for k in intra_rxns.keys() if k in i.id},
+            {i.id:(0, 10.) for i in cell.model.reactions for k in intra_rxns.keys() if k in i.id})
+        self.assertEqual({i.id:i.bounds for i in cell.model.reactions for k in extra_intra_rxns.keys() if k in i.id},
+            {i.id:(0, 10.) for i in cell.model.reactions for k in extra_intra_rxns.keys() if k in i.id})
+        self.assertEqual({i.id:i.bounds for i in cell.model.reactions for k in diff_bounds.keys()},
+            {i.id:(0, 5.) for i in cell.model.reactions for k in diff_bounds.keys()})
+         
 
 class RegionTestCase(unittest.TestCase):
     def test_init(self):

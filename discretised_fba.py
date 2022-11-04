@@ -37,6 +37,7 @@ class DiscretisedCell(object):
         self.length = length
         self.regions = np.empty((self.length, self.width), dtype=np.object)
         self.model = cobra.Model()
+        self.cell_level_reactions = {}
         for i in range(self.length):
             for j in range(self.width):
                 new_region = Region(i, j)
@@ -73,14 +74,15 @@ class DiscretisedCell(object):
             metabolite_objs.append(cobra.Metabolite(m))
         self.model.add_metabolites(metabolite_objs)           
         
-        # create reactions in the extracellular compartment
+        # create reactions in the extracellular compartment, i.e. cell-level reactions
         reaction_objs = []
         for k in extra_rxns.keys():
             rxn_obj = cobra.Reaction(k)
             reaction_objs.append(rxn_obj)
         self.model.add_reactions(reaction_objs)    
         for rxn_obj in reaction_objs:
-            rxn_obj.reaction = extra_rxns[rxn_obj.id]                    
+            rxn_obj.reaction = extra_rxns[rxn_obj.id]
+            self.cell_level_reactions[rxn_obj.id] = rxn_obj                    
         
         # create intracellular metabolites for each discrete region
         metabolite_objs = []
@@ -179,10 +181,23 @@ class DiscretisedCell(object):
         neighbours = list(filter(lambda cell: cell[0] in range(length) and cell[1] in range(width), neighbours))
         return neighbours
 
-    def set_bounds(self):
+    def set_bounds(self, rxn_bounds, diff_bounds):
         """ Set the bounds for each reaction and diffusion in each region
+
+        Args:
+            rxn_bounds (:obj:`dict`): tuple of max and min bounds for each given
+                reaction ID
+            diff_bounds (:obj:`dict`): tuple of max and min bounds for each given
+                diffusion ID      
         """
-        pass
+        # think again about the input arguments (rxn id for eahc region or general reaction ID?)
+        for i in range(self.length):
+            for j in range(self.width):
+                region = self.regions[i, j]
+                for rxn in region.reactions.values():
+                    rxn.bounds = rxn_bounds[rxn.id]
+                for diff in region.diffusions.values():
+                    diff.bounds = diff_bounds[diff.id]
 
     def solve(self):
         """ Optimise the objective function
