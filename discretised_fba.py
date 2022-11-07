@@ -181,24 +181,16 @@ class DiscretisedCell(object):
         neighbours = list(filter(lambda cell: cell[0] in range(length) and cell[1] in range(width), neighbours))
         return neighbours
 
-    def set_bounds(self, rxn_bounds, diff_bounds):
-        """ Set the bounds for each reaction and diffusion in each region
+    def set_bounds(self, bounds):
+        """ Set the bounds for all reactions and diffusions
 
         Args:
-            rxn_bounds (:obj:`dict`): tuple of max and min bounds for each given
-                reaction ID
-            diff_bounds (:obj:`dict`): tuple of max and min bounds for each given
-                diffusion ID      
+            bounds (:obj:`dict`): tuple of max and min bounds for each given
+                reaction/diffusion ID
         """
-        # think again about the input arguments (rxn id for eahc region or general reaction ID?)
-        for i in range(self.length):
-            for j in range(self.width):
-                region = self.regions[i, j]
-                for rxn in region.reactions.values():
-                    rxn.bounds = rxn_bounds[rxn.id]
-                for diff in region.diffusions.values():
-                    diff.bounds = diff_bounds[diff.id]
-
+        for rxn, bounds in bounds.items():
+            self.model.reactions.get_by_id(rxn).bounds = bounds
+                
     def solve(self):
         """ Optimise the objective function
 

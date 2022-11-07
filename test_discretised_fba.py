@@ -141,23 +141,35 @@ class CellTestCase(unittest.TestCase):
         cell.create_transport_reactions(['A[c]'], extra_intra_rxns)
         cell.create_diffusion(['A[c]'])
         rxn_bounds = {}
-        diff_bounds = {}
         for x in cell.regions:
             for region in x:
                 for rxn in region.reactions.values():
                     rxn_bounds[rxn.id] = (0, 10.)
                 for diff in region.diffusions.values():
-                    diff_bounds[diff.id] = (0, 5.)
+                    rxn_bounds[diff.id] = (0, 5.)
         rxn_bounds['R_A_ex'] = (0, 10.)               
-        cell.set_bounds(rxn_bounds, diff_bounds)
+        cell.set_bounds(rxn_bounds)
 
         self.assertEqual({i.id:i.bounds for i in cell.model.reactions for k in intra_rxns.keys() if k in i.id},
             {i.id:(0, 10.) for i in cell.model.reactions for k in intra_rxns.keys() if k in i.id})
         self.assertEqual({i.id:i.bounds for i in cell.model.reactions for k in extra_intra_rxns.keys() if k in i.id},
             {i.id:(0, 10.) for i in cell.model.reactions for k in extra_intra_rxns.keys() if k in i.id})
-        self.assertEqual({i.id:i.bounds for i in cell.model.reactions for k in diff_bounds.keys()},
-            {i.id:(0, 5.) for i in cell.model.reactions for k in diff_bounds.keys()})
-         
+        
+        for x in cell.regions:
+            for region in x:
+                for diff in region.diffusions.values():
+                    self.assertEqual(cell.model.reactions.get_by_id(diff.id).bounds, (0, 5.))         
+
+    def test_solve(self):
+        
+        cell = DiscretisedCell('good_cell', 4, 3)
+        cell.create_reactions(['A[e]'], ['A[c]'], {'R_A_ex': ' --> A[e]'}, {'R_syn': 'A[c] --> '}, 'R_syn')
+        cell.create_transport_reactions(['A[c]'], {'R_trans': 'A[e] --> A[c]'})
+        rxn_bounds = {rxn.id: (0, 20.) for rxn in cell.model.reactions}
+        cell.set_bounds(rxn_bounds)
+        solution = cell.solve()
+        
+        self.assertEqual(solution.objective_value, 20.)
 
 class RegionTestCase(unittest.TestCase):
     def test_init(self):
