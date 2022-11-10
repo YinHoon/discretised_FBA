@@ -181,6 +181,37 @@ class DiscretisedCell(object):
         neighbours = list(filter(lambda cell: cell[0] in range(length) and cell[1] in range(width), neighbours))
         return neighbours
 
+    def distribute_enzyme(self, enzyme_id, total_concentration, distribution_type=None, 
+        all_regions=True):
+        """ Distribute an enzyme into each region based on the distribution type
+
+        Args:
+            enzyme_id (:obj:`str`): enzyme ID
+            total_concentration (:obj:`float`): cellular concentration of the enzyme
+            distribution_type (:obj:`string`, optional): 4 types of distribution, i.e. 
+                uniform, where the enzyme is evenly distributed to every region;
+                inside_out, where concentration increases from inner to outer regions; 
+                outside_in, where concentration increases from outer to inner regions;
+                random, where enzyme is randomly distributed;
+                the default type is uniform
+            all_regions (:obj:`bool`, optional): if True, enzymes are distributed to all
+                regions, else only regions on the outer layer will contain the enzyme;
+                default is True
+
+        Raises:
+            :obj:`ValueError`: if distribution type is not 'uniform', 'inside_out', 
+                'outside_in', or 'random'          
+        """
+        if distribution_type:
+            distribution = distribution_type
+        else:    
+            distribution = 'uniform'
+
+        if distribution not in ["uniform", "inside_out", "outside_in", "random"]:
+            raise ValueError(
+                'distribution_type only takes "uniform", "inside_out", "outside_in" or "random"')
+
+
     def set_bounds(self, bounds):
         """ Set the bounds for all reactions and diffusions
 
@@ -226,6 +257,7 @@ class Region(object):
         self.metabolites = {}
         self.reactions = {}
         self.diffusions = {}
+        self.enzymes = {}
 
     def add_metabolite(self, metabolite):
         """ Add a metabolite to the region
@@ -250,3 +282,12 @@ class Region(object):
             diffusion (:obj:`cobra.Reaction`): a reaction object
         """
         self.diffusions[diffusion.id] = diffusion
+
+    def add_enzyme_concentration(self, enzyme_id, concentration):
+        """ Add an enzyme and its concentration to the region
+
+        Args:
+            enzyme_id (:obj:`str`): enzyme ID
+            concentration (:obj:`float`): concentration of enzyme in the region
+        """
+        self.enzymes[enzyme_id] = concentration 

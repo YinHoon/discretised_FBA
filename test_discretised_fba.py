@@ -123,6 +123,16 @@ class CellTestCase(unittest.TestCase):
         self.assertEqual(sorted(cell.get_neighbouring_regions(1,1)), 
             sorted([(0,0), (0,1), (0,2), (1,0), (1,2), (2,0), (2,1), (2,2)]))
 
+    def test_distribute_enzyme(self):
+        cell = DiscretisedCell('cell', 3, 4)
+
+        with self.assertRaises(ValueError) as error:
+            cell.distribute_enzyme('enzyme', 120, distribution_type='wrong_type')
+            self.assertEqual(error.exception.message, 
+                'distribution_type only takes "uniform", "inside_out", "outside_in" or "random"')
+        
+        cell.distribute_enzyme('enzyme', 120)
+
     def test_set_bounds(self):
         extra_mets = ['A[e]']
         intra_mets = ['A[c]', 'B[c]', 'Biomass[c]']
@@ -200,4 +210,9 @@ class RegionTestCase(unittest.TestCase):
         rxn = cobra.Reaction('R')
         region = Region(1, 2)
         region.add_diffusion(rxn)
-        self.assertEqual(region.diffusions, {'R': rxn})                     
+        self.assertEqual(region.diffusions, {'R': rxn})  
+
+    def test_add_enzyme_concentration(self):
+        region = Region(1,2)
+        region.add_enzyme_concentration('protein1', 20.5)
+        self.assertEqual(region.enzymes, {'protein1': 20.5})               
