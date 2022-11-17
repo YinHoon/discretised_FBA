@@ -8,6 +8,7 @@
 """
 
 from itertools import product, starmap
+from random import randint
 import cobra
 import numpy as np
 
@@ -129,9 +130,9 @@ class DiscretisedCell(object):
         # transport reactions between the extracellular and intracellular space
         x,y = np.ogrid[0:self.length, 0:self.width]
         # retrieve the inner layers
-        inner_layer = (x>0)&(x<self.length-1)&(y>0)&(y<self.width-1)
+        inner_layers = (x>0)&(x<self.length-1)&(y>0)&(y<self.width-1)
         # create transport reaction into the outermost layer
-        for region in self.regions[~inner_layer]:
+        for region in self.regions[~inner_layers]:
             for k, v in extra_intra_rxns.items():
                 region_rxn = cobra.Reaction(f'{k}_{region.id}')                    
                 region.add_reaction(region_rxn)
@@ -181,36 +182,52 @@ class DiscretisedCell(object):
         neighbours = list(filter(lambda cell: cell[0] in range(length) and cell[1] in range(width), neighbours))
         return neighbours
 
-    def distribute_enzyme(self, enzyme_id, total_concentration, distribution_type=None, 
-        all_regions=True):
+    def distribute_enzyme(self, enzyme_id, total_concentration, gradient=0, 
+        random_distribution=False, all_regions=True):
         """ Distribute an enzyme into each region based on the distribution type
 
         Args:
             enzyme_id (:obj:`str`): enzyme ID
             total_concentration (:obj:`float`): cellular concentration of the enzyme
-            distribution_type (:obj:`string`, optional): 4 types of distribution, i.e. 
-                uniform, where the enzyme is evenly distributed to every region;
-                inside_out, where concentration increases from inner to outer regions; 
-                outside_in, where concentration increases from outer to inner regions;
-                random, where enzyme is randomly distributed;
-                the default type is uniform
-            all_regions (:obj:`bool`, optional): if True, enzymes are distributed to all
-                regions, else only regions on the outer layer will contain the enzyme;
-                default is True
-
-        Raises:
-            :obj:`ValueError`: if distribution type is not 'uniform', 'inside_out', 
-                'outside_in', or 'random'          
+            gradient (:obj:`float`, optional): the gradient of enzyme distribution; 
+                a higher value will create a steeper gradient; a positive value will 
+                set the concentration to increase from outer to inner layers; a negative
+                value will set the concentration to decrease from outer to inner layers; 
+                a zero value will distribute the concentration uniformly (default)
+            random_distribution (:obj:`bool`, optional): if True, enzyme will be randomly
+                distributed; default is False
+            all_regions (:obj:`bool`, optional): if True, enzyme is distributed to all
+                regions, else enzyme is only distributed to regions in the outermost 
+                layer; default is True         
         """
-        if distribution_type:
-            distribution = distribution_type
-        else:    
-            distribution = 'uniform'
-
-        if distribution not in ["uniform", "inside_out", "outside_in", "random"]:
-            raise ValueError(
-                'distribution_type only takes "uniform", "inside_out", "outside_in" or "random"')
-
+        if all_regions:
+            if random_distribution:
+                sample = [randint(0,100) for i in range(self.width*self.length)]
+                enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
+                count = 0
+                for i in range(self.length):
+                    for j in range(self.width):
+                        self.regions[i, j].enzymes[enzyme_id] = enzyme_distribution[count]
+                        count += 1
+            else:
+                pass
+        else:
+            x,y = np.ogrid[0:self.length, 0:self.width]
+            inner_layers = (x>0)&(x<self.length-1)&(y>0)&(y<self.width-1)
+            outermost_layer = self.regions[~inner_layers]            
+            if random_distribution:
+                sample = [randint(0,100) for i in range(len(outermost_layer))]
+                enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
+                count = 0
+                for region in outermost_layer:
+                    region.enzymes[enzyme_id] = enzyme_distribution[count]
+                    count += 1
+            else:
+                uniform_concentration = total_concentration/len(outermost_layer)
+                for region in outermost_layer:
+                    region.enzymes[enzyme_id] = uniform_concentration
+            for region in self.regions[inner_layers]:
+                region.enzymes[enzyme_id] = 0            
 
     def set_bounds(self, bounds):
         """ Set the bounds for all reactions and diffusions

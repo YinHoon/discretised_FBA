@@ -125,13 +125,20 @@ class CellTestCase(unittest.TestCase):
 
     def test_distribute_enzyme(self):
         cell = DiscretisedCell('cell', 3, 4)
-
-        with self.assertRaises(ValueError) as error:
-            cell.distribute_enzyme('enzyme', 120, distribution_type='wrong_type')
-            self.assertEqual(error.exception.message, 
-                'distribution_type only takes "uniform", "inside_out", "outside_in" or "random"')
+        cell.distribute_enzyme('enzyme1', 120, random_distribution=True)
+        self.assertAlmostEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 120, delta=1e-12)
         
-        cell.distribute_enzyme('enzyme', 120)
+        cell = DiscretisedCell('cell', 3, 4)
+        cell.distribute_enzyme('enzyme1', 120, all_regions=False)
+        outer_coordinate = [(0,0), (0,1), (0,2), (1,0), (1,2), (2,0), (2,2), (3,0), (3,1), (3,2)]
+        for i in outer_coordinate:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 12)
+        self.assertAlmostEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 120, delta=1e-12)  
+        
+        cell = DiscretisedCell('cell', 3, 4)
+        cell.distribute_enzyme('enzyme1', 120, random_distribution=True, all_regions=False)
+        self.assertAlmostEqual(sum([cell.regions[i].enzymes['enzyme1'] for i in outer_coordinate]), 120, delta=1e-12)  
+        self.assertAlmostEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 120, delta=1e-12)
 
     def test_set_bounds(self):
         extra_mets = ['A[e]']
