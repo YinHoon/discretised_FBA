@@ -189,18 +189,27 @@ class DiscretisedCell(object):
         Args:
             enzyme_id (:obj:`str`): enzyme ID
             total_concentration (:obj:`float`): cellular concentration of the enzyme
-            gradient (:obj:`float`, optional): the gradient of enzyme distribution; 
-                a higher value will create a steeper gradient; a positive value will 
-                set the concentration to increase from outer to inner layers; a negative
-                value will set the concentration to decrease from outer to inner layers; 
-                a zero value will distribute the concentration uniformly (default)
+            gradient (:obj:`float`, optional): the gradient of enzyme distribution;
+                only takes a value between -1.0 to 1.0; a higher absolute value will 
+                create a steeper gradient; a positive value will set the concentration 
+                to increase from outer to inner layers; a negative value will set the 
+                concentration to decrease from outer to inner layers; a zero value will 
+                distribute the concentration uniformly (default)
             random_distribution (:obj:`bool`, optional): if True, enzyme will be randomly
                 distributed; default is False
             all_regions (:obj:`bool`, optional): if True, enzyme is distributed to all
                 regions, else enzyme is only distributed to regions in the outermost 
-                layer; default is True         
+                layer; default is True
+        
+        Raises:
+            :obj:`ValueError`: if the value of gradient is outside the range between 
+                -1.0 and 1.0
         """
+        if gradient < -1 or gradient > 1:
+            raise ValueError('gradient can only take a value between -1.0 and 1.0')
+        
         if all_regions:
+
             if random_distribution:
                 sample = [randint(0,100) for i in range(self.width*self.length)]
                 enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
@@ -209,8 +218,35 @@ class DiscretisedCell(object):
                     for j in range(self.width):
                         self.regions[i, j].enzymes[enzyme_id] = enzyme_distribution[count]
                         count += 1
+            
             else:
-                pass
+                if gradient == 0:
+                    distribution = np.ones((self.length, self.width), dtype=float)                    
+                
+                else:
+                    if gradient > 0:
+                        start_value = abs(gradient)
+                    else:    
+                        start_value = abs(gradient) * min(self.length, self.width) / 2
+
+                    distribution = np.full((self.length, self.width), start_value, 
+                        dtype=float)
+                    x,y = np.ogrid[0:self.length, 0:self.width]
+                    z = 1
+                    while z < self.length and z < self.width:
+                        inner_layers = (x>0+z-1)&(x<self.length-z)&(y>0+z-1)&(
+                            y<self.width-z)
+                        for i in range(self.length):
+                            for j in range(self.width):
+                                if inner_layers[i, j]:
+                                    distribution[i, j] += gradient                    
+                        z += 1
+                print(distribution)
+                for i in range(self.length):
+                    for j in range(self.width):     
+                        self.regions[i, j].enzymes[enzyme_id] = \
+                            total_concentration*distribution[i, j]/sum(sum(distribution))
+        
         else:
             x,y = np.ogrid[0:self.length, 0:self.width]
             inner_layers = (x>0)&(x<self.length-1)&(y>0)&(y<self.width-1)
