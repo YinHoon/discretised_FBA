@@ -93,7 +93,7 @@ class DiscretisedCell(object):
                 for m in intra_mets:
                     region_metabolite = cobra.Metabolite(f'{m}_{region.id}')
                     metabolite_objs.append(region_metabolite)
-                    region.add_metabolite(region_metabolite)    
+                    region.add_metabolite(m, region_metabolite)    
         self.model.add_metabolites(metabolite_objs)
 
         # create intracellular reactions for each discrete region
@@ -102,7 +102,7 @@ class DiscretisedCell(object):
                 region = self.regions[i, j]
                 for k, v in intra_rxns.items():
                     region_rxn = cobra.Reaction(f'{k}_{region.id}')                    
-                    region.add_reaction(region_rxn)
+                    region.add_synthesis_reaction(k, region_rxn)
                     self.model.add_reactions([region_rxn])
                     new_rxn_str = v 
                     for m in intra_mets:
@@ -135,7 +135,7 @@ class DiscretisedCell(object):
         for region in self.regions[~inner_layers]:
             for k, v in extra_intra_rxns.items():
                 region_rxn = cobra.Reaction(f'{k}_{region.id}')                    
-                region.add_reaction(region_rxn)
+                region.add_transport_reaction(k, region_rxn)
                 self.model.add_reactions([region_rxn])
                 new_rxn_str = v 
                 for m in intra_mets:
@@ -265,6 +265,39 @@ class DiscretisedCell(object):
             for region in self.regions[inner_layers]:
                 region.enzymes[enzyme_id] = 0            
 
+    def calc_enzymatic_bounds(self, enzyme_rxn_assoc):
+        """ Calculate the upper bound of each reaction in each region
+            using the formula k_cat * [E] where k_cat is the catalytic
+            constant and [E] is the concentration of enzyme. If there are
+            more than one enzyme catalysing a reaction, the bound will
+            the sum of all.
+
+        Args:
+            enzyme_rxn_assoc (:obj:`dict` of :obj:`dict`): the dictionary of
+                enzyme (ID) and its rate constant that catalyse a reaction (ID as key)
+
+        Returns:
+            :obj:`dict`: the upper bound of each enzyme catalysed synthesis reaction
+            :obj:`dict`: the upper bound of each enzyme catalysed transport reaction        
+        """
+        synthesis_reaction_bounds = {}
+        transport_reaction_bounds = {}
+        for i in range(self.length):
+            for j in range(self.width):
+                region = self.regions[i, j]
+                for k, v in region.synthesis_reactions.items():
+                    if k in enzyme_rxn_assoc:
+                        upper_bound = sum([k_cat*region.enzymes[enz] \
+                            for enz, k_cat in enzyme_rxn_assoc[k].items()])
+                        synthesis_reaction_bounds[v.id] = upper_bound
+                for k, v in region.transport_reactions.items():
+                    if k in enzyme_rxn_assoc:
+                        upper_bound = sum([k_cat*region.enzymes[enz] \
+                            for enz, k_cat in enzyme_rxn_assoc[k].items()])
+                        transport_reaction_bounds[v.id] = upper_bound
+
+        return synthesis_reaction_bounds, transport_reaction_bounds                                
+
     def set_bounds(self, bounds):
         """ Set the bounds for all reactions and diffusions
 
@@ -308,25 +341,37 @@ class Region(object):
         self.column_number = column_number
         self.id = f'{row_number},{column_number}'
         self.metabolites = {}
-        self.reactions = {}
+        self.synthesis_reactions = {}
+        self.transport_reactions = {}
         self.diffusions = {}
         self.enzymes = {}
 
-    def add_metabolite(self, metabolite):
+    def add_metabolite(self, metabolite_id, metabolite):
         """ Add a metabolite to the region
 
         Args:
+            metabolite_id (:obj:`str`): metabolite ID
             metabolite (:obj:`cobra.Metabolite`): a metabolite object
         """
-        self.metabolites[metabolite.id] = metabolite
+        self.metabolites[metabolite_id] = metabolite
 
-    def add_reaction(self, reaction):
-        """ Add a reaction to the region
+    def add_synthesis_reaction(self, reaction_id, reaction):
+        """ Add a synthesis reaction to the region
 
         Args:
+            reaction_id (:obj:`str`): reaction ID
             reaction (:obj:`cobra.Reaction`): a reaction object
         """
-        self.reactions[reaction.id] = reaction
+        self.synthesis_reactions[reaction_id] = reaction
+
+    def add_transport_reaction(self, reaction_id, reaction):
+        """ Add a synthesis reaction to the region
+
+        Args:
+            reaction_id (:obj:`str`): reaction ID
+            reaction (:obj:`cobra.Reaction`): a reaction object
+        """
+        self.transport_reactions[reaction_id] = reaction    
 
     def add_diffusion(self, diffusion):
         """ Add diffusion of a metabolite to the region

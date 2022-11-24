@@ -60,6 +60,8 @@ class CellTestCase(unittest.TestCase):
             'R_biomass_ex_0,1': 'Biomass[c]_0,1 --> ' # biomass exchange reaction
             }
         self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)
+        self.assertEqual(sorted(list(cell.regions[0,0].synthesis_reactions.keys())), sorted(intra_rxns))
+        self.assertEqual(sorted(list(cell.regions[0,1].synthesis_reactions.keys())), sorted(intra_rxns))
 
         self.assertEqual(str(cell.model.objective.expression), 
             '1.0*R_biomass_ex_0,0 - 1.0*R_biomass_ex_0,0_reverse_db2c7 + ' +
@@ -93,6 +95,8 @@ class CellTestCase(unittest.TestCase):
             'R_trans_2,3': 'A[e] --> A[c]_2,3',
             }
         self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)
+        for i in [(0,0), (0,1), (0,2), (0,3), (1,0), (1,3), (2,0), (2,1), (2,2), (2,3)]:
+            self.assertEqual(sorted(list(cell.regions[i].transport_reactions.keys())), sorted(extra_intra_rxns))
 
     def test_create_diffusion(self):
         
@@ -178,6 +182,32 @@ class CellTestCase(unittest.TestCase):
         self.assertAlmostEqual(sum([cell.regions[i].enzymes['enzyme1'] for i in outer_coordinate]), 120, delta=1e-12)  
         self.assertAlmostEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 120, delta=1e-12)
 
+    def test_calc_enzymatic_bounds(self):
+        extra_mets = ['A[e]']
+        intra_mets = ['A[c]', 'B[c]', 'Biomass[c]']
+        extra_rxns = {'R_A_ex': ' --> A[e]'}        
+        intra_rxns = {
+            'R_syn': 'A[c] --> B[c]', # synthesis reaction
+            'R_biomass': '2 B[c] --> Biomass[c]', # biomass reaction
+            'R_biomass_ex': 'Biomass[c] -->  ' # biomass exchange reaction
+            }
+        extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'} 
+        obj_rxn_id = 'R_biomass_ex'
+        enzyme_rxn_assoc = {'R_syn': {'e1': 0.5,'e2': 1.0}, 'R_trans': {'e1': 0.2}}
+
+        cell = DiscretisedCell('good_cell', 2, 1)
+        cell.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
+            obj_rxn_id)
+        cell.create_transport_reactions(['A[c]'], extra_intra_rxns)
+        cell.distribute_enzyme('e1', 10)
+        cell.distribute_enzyme('e2', 100)
+        synth_rxn_bounds, trans_rxn_bounds = cell.calc_enzymatic_bounds(enzyme_rxn_assoc)
+
+        test_syn_rxn_bounds = {'R_syn_0,0': 52.5, 'R_syn_0,1': 52.5}
+        test_trans_rxn_bounds = {'R_trans_0,0': 1.0, 'R_trans_0,1': 1.0}
+        self.assertDictEqual(synth_rxn_bounds, test_syn_rxn_bounds)
+        self.assertDictEqual(trans_rxn_bounds, test_trans_rxn_bounds)
+
     def test_set_bounds(self):
         extra_mets = ['A[e]']
         intra_mets = ['A[c]', 'B[c]', 'Biomass[c]']
@@ -198,8 +228,10 @@ class CellTestCase(unittest.TestCase):
         rxn_bounds = {}
         for x in cell.regions:
             for region in x:
-                for rxn in region.reactions.values():
+                for rxn in region.synthesis_reactions.values():
                     rxn_bounds[rxn.id] = (0, 10.)
+                for rxn in region.transport_reactions.values():
+                    rxn_bounds[rxn.id] = (0, 10.)    
                 for diff in region.diffusions.values():
                     rxn_bounds[diff.id] = (0, 5.)
         rxn_bounds['R_A_ex'] = (0, 10.)               
@@ -242,14 +274,20 @@ class RegionTestCase(unittest.TestCase):
     def test_add_metabolite(self):
         met = cobra.Metabolite('M')
         region = Region(1, 2)
-        region.add_metabolite(met)
-        self.assertEqual(region.metabolites, {'M': met})
+        region.add_metabolite('m', met)
+        self.assertEqual(region.metabolites, {'m': met})
 
-    def test_add_reaction(self):
+    def test_add_synthesis_reaction(self):
         rxn = cobra.Reaction('R')
         region = Region(1, 2)
-        region.add_reaction(rxn)
-        self.assertEqual(region.reactions, {'R': rxn})
+        region.add_synthesis_reaction('r', rxn)
+        self.assertEqual(region.synthesis_reactions, {'r': rxn})
+
+    def test_add_transport_reaction(self):
+        rxn = cobra.Reaction('R')
+        region = Region(1, 2)
+        region.add_transport_reaction('r', rxn)
+        self.assertEqual(region.transport_reactions, {'r': rxn})     
 
     def test_add_diffusion(self):
         rxn = cobra.Reaction('R')
