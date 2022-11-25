@@ -17,9 +17,16 @@ INTRACELLULAR_REACTIONS = {
 	}
 
 PROTEIN_REACTION_RULE = {
-    'Transport_A': 'Protein1',
-    'Synthesise_B': 'Protein2',
-    'Synthesise_biomass': 'Protein3'}	
+    'Transport_A': {'Protein1': 1.0},
+    'Synthesise_B': {'Protein2': 1.0},
+    'Synthesise_biomass': {'Protein3': 1.0}
+    }
+
+CELLULAR_PROTEIN_CONCENTRATION = {
+    'Protein1': 100, 
+    'Protein2': 100, 
+    'Protein3': 100
+    }	
 
 OBJECTIVE_REACTION = {'Biomass_reaction': 'Biomass --> '}
 
