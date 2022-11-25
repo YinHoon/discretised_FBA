@@ -135,7 +135,7 @@ class CellTestCase(unittest.TestCase):
             for j in i:
                 self.assertEqual(j.enzymes['enzyme1'], 10)
         self.assertAlmostEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 120, delta=1e-12)
-        # gradient distribution: decreasing outside in
+        # high gradient distribution: decreasing outside in
         cell = DiscretisedCell('cell', 6, 6)
         cell.distribute_enzyme('enzyme1', 550, gradient=-1)
         first_layer = [(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(0,1),(5,1),(0,2),
@@ -150,7 +150,22 @@ class CellTestCase(unittest.TestCase):
         for i in third_layer:
             self.assertEqual(cell.regions[i].enzymes['enzyme1'], 6.25)    
         self.assertEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 550)
-        # gradient distribution: increasing outside in
+        # low gradient distribution: decreasing outside in
+        cell = DiscretisedCell('cell', 6, 6)
+        cell.distribute_enzyme('enzyme1', 1060, gradient=-0.1)
+        first_layer = [(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(0,1),(5,1),(0,2),
+            (5,2),(0,3),(5,3),(0,4),(5,4),(0,5),(1,5),(2,5),(3,5),(4,5),(5,5)]
+        for i in first_layer:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 30)
+        second_layer = [(1,1),(2,1),(3,1),(4,1),(1,2),(4,2),(1,3),(4,3),
+            (1,4),(2,4),(3,4),(4,4)]
+        for i in second_layer:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 29)
+        third_layer = [(2,2),(2,3),(3,2),(3,3)]
+        for i in third_layer:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 28)    
+        self.assertEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 1060)
+        # high gradient distribution: increasing outside in
         cell = DiscretisedCell('cell', 6, 6)
         cell.distribute_enzyme('enzyme1', 560, gradient=1)
         first_layer = [(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(0,1),(5,1),(0,2),
@@ -165,6 +180,21 @@ class CellTestCase(unittest.TestCase):
         for i in third_layer:
             self.assertEqual(cell.regions[i].enzymes['enzyme1'], 30)    
         self.assertEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 560)
+        # low gradient distribution: increasing outside in
+        cell = DiscretisedCell('cell', 6, 6)
+        cell.distribute_enzyme('enzyme1', 460, gradient=0.5)
+        first_layer = [(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(0,1),(5,1),(0,2),
+            (5,2),(0,3),(5,3),(0,4),(5,4),(0,5),(1,5),(2,5),(3,5),(4,5),(5,5)]
+        for i in first_layer:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 10)
+        second_layer = [(1,1),(2,1),(3,1),(4,1),(1,2),(4,2),(1,3),(4,3),
+            (1,4),(2,4),(3,4),(4,4)]
+        for i in second_layer:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 15)
+        third_layer = [(2,2),(2,3),(3,2),(3,3)]
+        for i in third_layer:
+            self.assertEqual(cell.regions[i].enzymes['enzyme1'], 20)    
+        self.assertEqual(sum([j.enzymes['enzyme1'] for i in cell.regions for j in i]), 460)
         # random distribution to all regions
         cell = DiscretisedCell('cell', 3, 4)
         cell.distribute_enzyme('enzyme1', 120, random_distribution=True)

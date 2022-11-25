@@ -225,9 +225,9 @@ class DiscretisedCell(object):
                 
                 else:
                     if gradient > 0:
-                        start_value = abs(gradient)
+                        start_value = 1
                     else:    
-                        start_value = abs(gradient) * min(self.length, self.width) / 2
+                        start_value = min(self.length, self.width) / 2
 
                     distribution = np.full((self.length, self.width), start_value, 
                         dtype=float)
