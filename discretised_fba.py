@@ -241,7 +241,6 @@ class DiscretisedCell(object):
                                 if inner_layers[i, j]:
                                     distribution[i, j] += gradient                    
                         z += 1
-                print(distribution)
                 for i in range(self.length):
                     for j in range(self.width):     
                         self.regions[i, j].enzymes[enzyme_id] = \
