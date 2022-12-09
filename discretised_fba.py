@@ -23,6 +23,14 @@ class DiscretisedCell(object):
             id (:obj:`str`): cell ID
             width (:obj:`int`): cell width
             length (:obj:`int`): cell length
+            aspect_ratio (:obj:`float`): length divided by width
+            peri_to_area (:obj:`float`): number of regions in the outer
+                layer divided by the total number of regions
+            regions (:obj:`numpy.object`): array of numpy objects with a
+                size of length x width
+            model (:obj:`cobra.Model`): FBA model object
+            cell_level_reactions (:obj:`dict`): dictionary of cell-level 
+                reactions, i.e. reactions in the extracellular compartment         
 
         Raises:
             :obj:`TypeError`: if the width and/or length is not an integer    
@@ -36,6 +44,14 @@ class DiscretisedCell(object):
         self.id = cell_id
         self.width = width
         self.length = length
+        self.aspect_ratio = self.length / self.width
+        
+        if self.width==1 or self.length==1:
+            pa_ratio = 1
+        else:    
+            pa_ratio = (2*(self.width + self.length) - 4) / (self.width*self.length)
+        self.peri_to_area = pa_ratio
+        
         self.regions = np.empty((self.length, self.width), dtype=np.object)
         self.model = cobra.Model()
         self.cell_level_reactions = {}

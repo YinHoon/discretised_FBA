@@ -18,11 +18,26 @@ class CellTestCase(unittest.TestCase):
         self.assertEqual(cell.id, 'good_cell')
         self.assertEqual(cell.width, 3)
         self.assertEqual(cell.length, 2)
+        self.assertEqual(cell.aspect_ratio, 2/3)
+        self.assertEqual(cell.peri_to_area, 1)
         self.assertEqual(cell.regions.size, 6)
         self.assertEqual(len(cell.regions), 2)
         self.assertEqual(all(isinstance(i, Region) for j in cell.regions for i in j), True)
         self.assertEqual(sorted([i.id for j in cell.regions for i in j]), 
             sorted(['0,0', '0,1', '0,2', '1,0', '1,1', '1,2']))
+
+        cell = DiscretisedCell('good_cell', 2, 3)
+        self.assertEqual(cell.peri_to_area, 1)
+        cell = DiscretisedCell('good_cell', 1, 10)
+        self.assertEqual(cell.peri_to_area, 1)
+        cell = DiscretisedCell('good_cell', 13, 1)
+        self.assertEqual(cell.peri_to_area, 1)
+        cell = DiscretisedCell('good_cell', 2, 2)
+        self.assertEqual(cell.peri_to_area, 1)
+        cell = DiscretisedCell('good_cell', 1, 1)
+        self.assertEqual(cell.peri_to_area, 1)
+        cell = DiscretisedCell('good_cell', 5, 6)
+        self.assertEqual(cell.peri_to_area, 18/30)
 
         with self.assertRaises(TypeError) as error:
             bad_cell1 = DiscretisedCell('bad_cell1', 0.2, 2)
