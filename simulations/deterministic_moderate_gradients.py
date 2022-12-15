@@ -1,5 +1,5 @@
 """ Simulations where enzymes are distributed into
-uniform or steep gradient patterns
+uniform or moderate gradient patterns
 
 :Author: Yin Hoon Chew <yinhoon.chew@bham.ac.uk>
 :Date: 07-11-2022
@@ -23,7 +23,7 @@ sys.path.append(CODE_DIR)
 from discretised_fba import DiscretisedCell
 
 
-ENZYME_DISTRIBUTION = ['uniform', 'steep_inside_out', 'steep_outside_in']
+ENZYME_DISTRIBUTION = ['uniform', 'moderate_inside_out', 'moderate_outside_in']
 DIFFUSING_METABOLITES = [['A[c]', 'B[c]'], ['A[c]'], ['B[c]'], []]  
 
 # initialise results dictionary
@@ -31,7 +31,7 @@ permutations = list(itertools.product(ENZYME_DISTRIBUTION, repeat=3))
 
 # remove gradient distribution for transport protein        
 results = {','.join(i): {' and '.join(j): [] for j in DIFFUSING_METABOLITES} \
-    for i in permutations if i[0] not in ['steep_inside_out', 'steep_outside_in']} 
+    for i in permutations if i[0] not in ['moderate_inside_out', 'moderate_outside_in']} 
 
 # Run simulations
 for diffusion in DIFFUSING_METABOLITES:
@@ -80,7 +80,7 @@ for diffusion in DIFFUSING_METABOLITES:
                 })
             
 # Write results to an excel file
-dest_filename = abspath(join(THIS_DIR, '..', 'results', 'deterministic_steep_gradients.xlsx'))
+dest_filename = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients.xlsx'))
 wb = Workbook()
 sheets = {}
 shape_properties = ['ShapeID', 'Aspect ratio', 'Perimeter-to-area ratio']
@@ -111,8 +111,8 @@ wb.save(filename = dest_filename)
 # Plot results
 distribution_dictionary = {
         'uniform': '0', 
-        'steep_inside_out': '\u2013', 
-        'steep_outside_in': '+'}
+        'moderate_inside_out': '\u2013', 
+        'moderate_outside_in': '+'}
 
 # line graph
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 6))
