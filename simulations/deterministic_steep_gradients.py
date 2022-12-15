@@ -79,7 +79,7 @@ for diffusion in DIFFUSING_METABOLITES:
                 })
             
 # Write results to an excel file
-dest_filename = abspath(join(THIS_DIR, '..', 'results', 'deterministic.xlsx'))
+dest_filename = abspath(join(THIS_DIR, '..', 'results', 'deterministic_steep_gradients.xlsx'))
 wb = Workbook()
 sheets = {}
 shape_properties = ['ShapeID', 'Aspect ratio', 'Perimeter-to-area ratio']
