@@ -6,7 +6,7 @@
 
 """
 
-from discretised_fba import DiscretisedCell, Region
+from discretised_fba.discretised_fba import DiscretisedCell, Region
 import cobra
 import unittest
 

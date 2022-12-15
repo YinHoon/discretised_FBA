@@ -5,6 +5,14 @@
 :License: MIT
 
 """
+from os.path import dirname, abspath, join
+import sys
+
+# Find code directory relative to our directory
+THIS_DIR = dirname(__file__)
+CODE_DIR = abspath(join(THIS_DIR, '..', 'discretised_fba'))
+sys.path.append(CODE_DIR)
+
 
 from discretised_fba import DiscretisedCell
 from openpyxl import Workbook
