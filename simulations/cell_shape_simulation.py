@@ -5,49 +5,23 @@
 :License: MIT
 
 """
+
+from model import *
+from openpyxl import Workbook
 from os.path import dirname, abspath, join
+import collections
+import itertools
+import matplotlib.pyplot as plt
+import pkg_resources
 import sys
 
 # Find code directory relative to our directory
 THIS_DIR = dirname(__file__)
 CODE_DIR = abspath(join(THIS_DIR, '..', 'discretised_fba'))
 sys.path.append(CODE_DIR)
-
-
 from discretised_fba import DiscretisedCell
-from openpyxl import Workbook
-import itertools
-import matplotlib.pyplot as plt
 
 
-# Exoerimental designs
-METABOLITES = ['A[e]', 'A[c]', 'B[c]', 'Biomass']
-EXCHANGE_REACTION = {'EX_A': ' --> A[e]'}
-TRANSPORT_REACTION = {'Transport_A': 'A[e] --> A[c]'}
-INTRACELLULAR_REACTIONS = {
-    'Synthesise_B': 'A[c] --> B[c]',
-    'Synthesise_biomass': 'B[c] --> Biomass',
-    'Biomass_reaction': 'Biomass --> '
-    }
-PROTEIN_REACTION_RULE = {
-    'Transport_A': {'Protein1': 1.0},
-    'Synthesise_B': {'Protein2': 1.0},
-    'Synthesise_biomass': {'Protein3': 1.0}
-    }
-CELLULAR_PROTEIN_CONCENTRATION = [
-    ('Protein1', 100),
-    ('Protein2', 100), 
-    ('Protein3', 100),
-]
-CELL_SHAPES = [
-    {'ShapeID': '6x6', 'Width': 6, 'Length': 6},
-    {'ShapeID': '4x9', 'Width': 4, 'Length': 9},
-    {'ShapeID': '3x12', 'Width': 3, 'Length': 12},
-    {'ShapeID': '2x18', 'Width': 2, 'Length': 18},
-    {'ShapeID': '1x36', 'Width': 1, 'Length': 36},
-]
-#ENZYME_DISTRIBUTION = ['uniform', 'moderate_inside_out', 'steep_inside_out', 
-#    'moderate_outside_in','steep_outside_in', 'random']
 ENZYME_DISTRIBUTION = ['uniform', 'steep_inside_out', 'steep_outside_in']
 DIFFUSING_METABOLITES = [['A[c]', 'B[c]'], ['A[c]'], ['B[c]'], []]  
 
@@ -105,7 +79,7 @@ for diffusion in DIFFUSING_METABOLITES:
                 })
             
 # Write results to an excel file
-dest_filename = 'results.xlsx'
+dest_filename = abspath(join(THIS_DIR, '..', 'results', 'deterministic.xlsx'))
 wb = Workbook()
 sheets = {}
 shape_properties = ['ShapeID', 'Aspect ratio', 'Perimeter-to-area ratio']
@@ -134,6 +108,12 @@ for distrib_name, data in results.items():
 wb.save(filename = dest_filename)
 
 # Plot results
+distribution_dictionary = {
+        'uniform': '0', 
+        'steep_inside_out': '\u2013', 
+        'steep_outside_in': '+'}
+
+# line graph
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 6))
 axes = axes.ravel()  # array to 1D
 cols = results.keys()
@@ -145,14 +125,43 @@ for col, ax in zip(cols, axes):
         diff_name = diff if diff else 'No diffusion'
         ax.plot([i['Perimeter-to-area ratio'] for i in value], 
             [i['Simulation'].objective_value for i in value], colour, label=diff_name)
-    distribution_dictionary = {
-        'uniform': 'u', 
-        'steep_inside_out': 'io', 
-        'steep_outside_in': 'oi'}
-    subplot_title = ','.join([distribution_dictionary[i] for i in col.split(',')])    
+    subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
+    ax.set_ylim([0, 120])  
     ax.title.set_text(subplot_title)
     ax.set_xlabel('Perimeter-to-area ratio')
     ax.set_ylabel('Biomass growth')
 ax.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
 fig.tight_layout()
+
+# Bar graph
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 6))
+#plt.setp(axes.flat, xlabel='X-label', ylabel='Y-label')
+pad = 5 # in points
+cols = ['A[c]', 'B[c]', 'No diffusion']
+rows = ['6x6']
+
+for row, shape in enumerate(rows):
+    for col, diff_name in enumerate(cols):
+        diff_key = diff_name if diff_name != 'No diffusion' else ''
+        data = collections.defaultdict(list)
+        for distrib_name, values in results.items():
+            for cell in values[diff_key]:
+                if cell['ShapeID'] == shape:
+                    data[round(cell['Simulation'].objective_value, 5)].append(
+                        ''.join([distribution_dictionary[i] 
+                            for i in distrib_name.split(',')]))
+        y = sorted(data.keys())
+        x = ['\n'.join(data[i]) for i in y]
+        ax = axes[col]
+        ax.bar(x, y, width=0.4)
+        ax.set_ylim([0, 120])  
+        ax.set_ylabel('Biomass growth')
+        ax.title.set_text(diff_name)
+
+plt.subplots_adjust(left=0.1,
+                    bottom=0.5,
+                    right=0.9,
+                    top=0.9,
+                    wspace=0.4,
+                    hspace=0.4)
 plt.show()
