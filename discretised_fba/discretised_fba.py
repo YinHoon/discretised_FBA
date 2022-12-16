@@ -8,9 +8,9 @@
 """
 
 from itertools import product, starmap
-from random import randint
 import cobra
 import numpy as np
+import random
 
 
 class DiscretisedCell(object):
@@ -199,7 +199,7 @@ class DiscretisedCell(object):
         return neighbours
 
     def distribute_enzyme(self, enzyme_id, total_concentration, gradient=0, 
-        random_distribution=False, all_regions=True):
+        random_distribution=False, random_seed=None, all_regions=True):
         """ Distribute an enzyme into each region based on the distribution type
 
         Args:
@@ -213,6 +213,9 @@ class DiscretisedCell(object):
                 distribute the concentration uniformly (default)
             random_distribution (:obj:`bool`, optional): if True, enzyme will be randomly
                 distributed; default is False
+            random_seed (:obj:`int`, optional): the seed value used for random number 
+                generator if random distribution is true. If no value is provided,
+                tha random number will not be seeded    
             all_regions (:obj:`bool`, optional): if True, enzyme is distributed to all
                 regions, else enzyme is only distributed to regions in the outermost 
                 layer; default is True
@@ -227,7 +230,8 @@ class DiscretisedCell(object):
         if all_regions:
 
             if random_distribution:
-                sample = [randint(0,100) for i in range(self.width*self.length)]
+                random.seed(random_seed)
+                sample = [random.randint(0,100) for i in range(self.width*self.length)]
                 enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
                 count = 0
                 for i in range(self.length):
@@ -267,7 +271,8 @@ class DiscretisedCell(object):
             inner_layers = (x>0)&(x<self.length-1)&(y>0)&(y<self.width-1)
             outermost_layer = self.regions[~inner_layers]            
             if random_distribution:
-                sample = [randint(0,100) for i in range(len(outermost_layer))]
+                random.seed(random_seed)
+                sample = [random.randint(0,100) for i in range(len(outermost_layer))]
                 enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
                 count = 0
                 for region in outermost_layer:
