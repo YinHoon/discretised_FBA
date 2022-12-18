@@ -12,7 +12,6 @@ from os.path import dirname, abspath, join
 import collections
 import itertools
 import matplotlib.pyplot as plt
-import pkg_resources
 import random
 import sys
 
