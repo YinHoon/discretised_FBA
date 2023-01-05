@@ -12,6 +12,7 @@ from os.path import dirname, abspath, join
 import collections
 import itertools
 import matplotlib.pyplot as plt
+import numpy as np
 import random
 import seaborn as sns
 import sys
@@ -34,9 +35,6 @@ results = {','.join(i): {' and '.join(j): [] for j in DIFFUSING_METABOLITES} \
     for i in permutations if i[0] not in ['steep_inside_out', 'steep_outside_in'] \
     and 'random' in i}
 
-# Seed random number generator
-random.seed(1)
-
 # Run simulations
 for diffusion in DIFFUSING_METABOLITES:
     diff_name = ' and '.join(diffusion)
@@ -53,7 +51,6 @@ for diffusion in DIFFUSING_METABOLITES:
             
             for individual in range(POPULATION_SIZE):                       
                 for ind, protein in enumerate(CELLULAR_PROTEIN_CONCENTRATION):
-                    seed_value = random.randint(1,100)
                     distribution = distribution_combination[ind]
                     all_regions = False if ind == 0 else True # transport protein
                     random_distribution = True if distribution == 'random' else False
@@ -68,8 +65,7 @@ for diffusion in DIFFUSING_METABOLITES:
                     else:
                         gradient = 0.0    
                     cell.distribute_enzyme(protein[0], protein[1], gradient=gradient, 
-                        random_distribution=random_distribution, random_seed=seed_value, 
-                        all_regions=all_regions)
+                        random_distribution=random_distribution, all_regions=all_regions)
                 synth_rxns, trans_rxns = cell.calc_enzymatic_bounds(PROTEIN_REACTION_RULE)
                 rxn_bounds = {}
                 for rxn in cell.model.reactions:
@@ -141,15 +137,15 @@ for shape in CELL_SHAPES:
             diff_name = diff if diff else 'No diffusion'
             data = [j.objective_value for i in value for j in i['Simulation'] \
                 if i['ShapeID']==shape['ShapeID']]
-            if data.count(data[0]) == len(data):
-                ax.axvline(data[0], color=colour, label=diff_name)
+            if np.var(data) < 1e-05:
+                ax.axvline(np.mean(data), color=colour, label=diff_name)
             else:
                 sns.set_style('white')
                 sns.kdeplot(data, ax=ax, color=colour, label=diff_name)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 1])
-        ax.set_xlim([0, 100])
+        ax.set_xlim([0, 120])
         line, label = ax.get_legend_handles_labels()
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
