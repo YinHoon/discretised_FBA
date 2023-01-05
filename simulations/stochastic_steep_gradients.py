@@ -13,6 +13,7 @@ import collections
 import itertools
 import matplotlib.pyplot as plt
 import random
+import seaborn as sns
 import sys
 
 # Find code directory relative to our directory
@@ -33,6 +34,9 @@ results = {','.join(i): {' and '.join(j): [] for j in DIFFUSING_METABOLITES} \
     for i in permutations if i[0] not in ['steep_inside_out', 'steep_outside_in'] \
     and 'random' in i}
 
+# Seed random number generator
+random.seed(1)
+
 # Run simulations
 for diffusion in DIFFUSING_METABOLITES:
     diff_name = ' and '.join(diffusion)
@@ -46,10 +50,10 @@ for diffusion in DIFFUSING_METABOLITES:
         for distrib_name in results:
             distribution_combination = distrib_name.split(',')
             all_solutions = []
-            random.seed(1)
-            for individual in range(POPULATION_SIZE):
-                seed_value = random.randint(1,100)       
+            
+            for individual in range(POPULATION_SIZE):                       
                 for ind, protein in enumerate(CELLULAR_PROTEIN_CONCENTRATION):
+                    seed_value = random.randint(1,100)
                     distribution = distribution_combination[ind]
                     all_regions = False if ind == 0 else True # transport protein
                     random_distribution = True if distribution == 'random' else False
@@ -117,3 +121,40 @@ for distrib_name, data in results.items():
                 row += 1        
         
 wb.save(filename = dest_filename)
+
+# Plot kernel density
+distribution_dictionary = {
+        'uniform': '0', 
+        'steep_inside_out': '\u2013', 
+        'steep_outside_in': '+',
+        'random': 'r'}
+cols = results.keys()
+colours = ['r', 'g', 'b', 'k']
+
+for shape in CELL_SHAPES:
+    fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
+    axes = axes.ravel()  # array to 1D
+    fig.suptitle(f'Cell geometry: {shape["ShapeID"]}')
+    for col, ax in zip(cols, axes):
+        for diff, colour in zip(sorted(results[col].keys()), colours):
+            value = results[col][diff]
+            diff_name = diff if diff else 'No diffusion'
+            data = [j.objective_value for i in value for j in i['Simulation'] \
+                if i['ShapeID']==shape['ShapeID']]
+            if data.count(data[0]) == len(data):
+                ax.axvline(data[0], color=colour, label=diff_name)
+            else:
+                sns.set_style('white')
+                sns.kdeplot(data, ax=ax, color=colour, label=diff_name)
+        subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
+        ax.title.set_text(subplot_title)
+        ax.set_ylim([0, 1])
+        ax.set_xlim([0, 100])
+        line, label = ax.get_legend_handles_labels()
+    fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
+    fig.tight_layout()
+    axes.flat[-1].set_visible(False)
+    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{shape["ShapeID"]}.png'))
+    fig.savefig(dest_figname)
+
+plt.show()
