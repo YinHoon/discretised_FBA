@@ -230,7 +230,8 @@ class DiscretisedCell(object):
         if all_regions:
 
             if random_distribution:
-                random.seed(random_seed)
+                if random_seed:
+                    random.seed(random_seed)
                 sample = [random.randint(0,100) for i in range(self.width*self.length)]
                 enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
                 count = 0
@@ -271,7 +272,8 @@ class DiscretisedCell(object):
             inner_layers = (x>0)&(x<self.length-1)&(y>0)&(y<self.width-1)
             outermost_layer = self.regions[~inner_layers]            
             if random_distribution:
-                random.seed(random_seed)
+                if random_seed:
+                    random.seed(random_seed)
                 sample = [random.randint(0,100) for i in range(len(outermost_layer))]
                 enzyme_distribution = [total_concentration*i/sum(sample) for i in sample]
                 count = 0
