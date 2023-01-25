@@ -9,10 +9,13 @@
 from model import *
 from openpyxl import Workbook
 from os.path import dirname, abspath, join
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardScaler
 import collections
 import itertools
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import random
 import seaborn as sns
 import sys
@@ -152,5 +155,42 @@ for shape in CELL_SHAPES:
     axes.flat[-1].set_visible(False)
     dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{shape["ShapeID"]}.tiff'))
     fig.savefig(dest_figname, dpi=1200)
+
+# Perform multivariate regression analysis
+flatten_results = []
+for distrib_name, v1 in results.items():
+    data_entry = distrib_name.split(',')
+    for diffusion_type, v2 in v1.items():
+        dif = diffusion_type if diffusion_type else 'No diffusion'
+        data_entry.append(dif)
+        for shape_sim in v2:
+            data_entry.append(shape_sim['Aspect ratio'])
+            data_entry.append(shape_sim['Perimeter-to-area ratio'])
+            data = [j.objective_value for j in shape_sim['Simulation']]
+            data_entry.append(np.mean(data))  
+            data_entry.append(np.std(data))
+    flatten_results.append(data_entry)        
+
+df = pd.DataFrame(flatten_results, columns=['Protein1', 'Protein2', 'Protein3', 
+    'Diffusion', 'Aspect_ratio', 'Perimeter_to_area_ratio', 'Mean_growth', 
+    'Standard_deviation_growth'])
+numerical_X_variables = ['Aspect_ratio', 'Perimeter_to_area_ratio']
+categorical_X_variables = ['Protein1', 'Protein2', 'Protein3', 'Diffusion']
+Y_variables = ['Mean_growth', 'Standard_deviation_growth']
+# Standardize numerical variables
+X_scaled = StandardScaler().fit_transform(df[numerical_X_variables])
+scaled_df = pd.DataFrame(X_scaled, columns=numerical_X_variables)
+# Convert categorical variables to dummy variables
+categorical_df = pd.get_dummies(df[categorical_X_variables])
+
+X = pd.concat([scaled_df, categorical_df], axis=1)
+Y = df[Y_variables]
+
+interaction = PolynomialFeatures(degree=2, include_bias=False, interaction_only=False)
+X_interaction = pd.DataFrame(interaction.fit_transform(X))
+interaction_terms = interaction.get_feature_names_out()
+
+model = LinearRegression()
+model.fit(X_interaction, Y)
 
 plt.show()
