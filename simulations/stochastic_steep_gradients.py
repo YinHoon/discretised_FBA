@@ -9,7 +9,7 @@
 from model import *
 from openpyxl import Workbook
 from os.path import dirname, abspath, join
-from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardScaler
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 import collections
 import itertools
 import matplotlib.pyplot as plt
@@ -184,12 +184,17 @@ scaled_df = pd.DataFrame(X_scaled, columns=numerical_X_variables)
 categorical_df = pd.get_dummies(df[categorical_X_variables])
 
 X = pd.concat([scaled_df, categorical_df], axis=1)
-Y = df[Y_variables]
-interaction = PolynomialFeatures(degree=2, include_bias=False, interaction_only=False)
-X_interaction = pd.DataFrame(interaction.fit_transform(X))
+Y_growth = df[['Mean_growth']]
+Y_std = df[['Standard_deviation_growth']]
+interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=True)
+transform_X = interaction.fit_transform(X)
 interaction_terms = interaction.get_feature_names_out()
+X_interaction = pd.DataFrame(transform_X, columns=interaction_terms)
 
-model = sm.OLS(Y, sm.add_constant(X_interaction)).fit()
+model_growth = sm.OLS(Y_growth, sm.add_constant(X_interaction)).fit()
+model_std = sm.OLS(Y_std, sm.add_constant(X_interaction)).fit()
 dest_filename = abspath(join(THIS_DIR, '..', 'results', f'Multivariate_regression.csv'))
 with open(dest_filename, 'w') as f:
-    f.write(model.summary().as_csv()) # this one has error!!!
+    f.write(model_growth.summary().as_csv())
+    f.write('\n\n')
+    f.write(model_std.summary().as_csv())
