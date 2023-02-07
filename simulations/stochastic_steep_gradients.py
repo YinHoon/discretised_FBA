@@ -157,9 +157,9 @@ for shape in CELL_SHAPES:
 
 # Perform multivariate regression analysis on population data
 column_headings = ['Protein1', 'Protein2', 'Protein3', 
-    'Diffusion', 'Aspect_ratio', 'Perimeter_to_area_ratio', 'Mean_growth', 
+    'Diffusion', 'Perimeter_to_area_ratio', 'Mean_growth', 
     'Standard_deviation_growth']
-numerical_X_variables = ['Aspect_ratio', 'Perimeter_to_area_ratio']
+numerical_X_variables = ['Perimeter_to_area_ratio']
 categorical_X_variables = ['Protein1', 'Protein2', 'Protein3', 'Diffusion']
 Y_variables = ['Mean_growth', 'Standard_deviation_growth']
 flatten_results = []
@@ -169,7 +169,6 @@ for distrib_name, v1 in results.items():
         dif = diffusion_type if diffusion_type else 'No diffusion'
         for shape_sim in v2:
             data_entry = distrib + [dif]
-            data_entry.append(shape_sim['Aspect ratio'])
             data_entry.append(shape_sim['Perimeter-to-area ratio'])
             data = [j.objective_value for j in shape_sim['Simulation']]
             data_entry.append(np.mean(data))  
@@ -182,19 +181,42 @@ X_scaled = StandardScaler().fit_transform(df[numerical_X_variables])
 scaled_df = pd.DataFrame(X_scaled, columns=numerical_X_variables)
 # Convert categorical variables to dummy variables
 categorical_df = pd.get_dummies(df[categorical_X_variables])
-
+# Prepare dataframe for X and Y
 X = pd.concat([scaled_df, categorical_df], axis=1)
+X_without_shape = X.drop('Perimeter_to_area_ratio', axis=1)
 Y_growth = df[['Mean_growth']]
 Y_std = df[['Standard_deviation_growth']]
+
+# Regression without interaction terms
+model_growth = sm.OLS(Y_growth, sm.add_constant(X)).fit()
+model_std = sm.OLS(Y_std, sm.add_constant(X)).fit()
+
+# Regression with interaction terms
 interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=True)
 transform_X = interaction.fit_transform(X)
 interaction_terms = interaction.get_feature_names_out()
 X_interaction = pd.DataFrame(transform_X, columns=interaction_terms)
+model_growth_inter = sm.OLS(Y_growth, sm.add_constant(X_interaction)).fit()
+model_std_inter = sm.OLS(Y_std, sm.add_constant(X_interaction)).fit()
 
-model_growth = sm.OLS(Y_growth, sm.add_constant(X_interaction)).fit()
-model_std = sm.OLS(Y_std, sm.add_constant(X_interaction)).fit()
+# Regression with interaction terms, without considering shape
+interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=True)
+transform_X = interaction.fit_transform(X_without_shape)
+interaction_terms = interaction.get_feature_names_out()
+X_interaction = pd.DataFrame(transform_X, columns=interaction_terms)
+model_growth_inter_no_shape = sm.OLS(Y_growth, sm.add_constant(X_interaction)).fit()
+model_std_inter_no_shape = sm.OLS(Y_std, sm.add_constant(X_interaction)).fit()
+
 dest_filename = abspath(join(THIS_DIR, '..', 'results', f'Multivariate_regression.csv'))
 with open(dest_filename, 'w') as f:
     f.write(model_growth.summary().as_csv())
     f.write('\n\n')
     f.write(model_std.summary().as_csv())
+    f.write('\n\n')
+    f.write(model_growth_inter.summary().as_csv())
+    f.write('\n\n')
+    f.write(model_std_inter.summary().as_csv())
+    f.write('\n\n')
+    f.write(model_growth_inter_no_shape.summary().as_csv())
+    f.write('\n\n')
+    f.write(model_std_inter_no_shape.summary().as_csv())
