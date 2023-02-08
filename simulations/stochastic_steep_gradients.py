@@ -168,44 +168,47 @@ for distrib_name, v1 in results.items():
     for diffusion_type, v2 in v1.items():
         dif = diffusion_type if diffusion_type else 'No diffusion'
         for shape_sim in v2:
-            data_entry = distrib + [dif]
-            data_entry.append(shape_sim['Perimeter-to-area ratio'])
             data = [j.objective_value for j in shape_sim['Simulation']]
-            data_entry.append(np.mean(data))  
-            data_entry.append(np.std(data))
-            flatten_results.append(data_entry)        
+            if np.var(data) < 1e-05:
+                data_entry = distrib + [dif]
+                data_entry.append(shape_sim['Perimeter-to-area ratio'])            
+                data_entry.append(np.mean(data))  
+                data_entry.append(np.std(data))
+                flatten_results.append(data_entry)        
 
 df = pd.DataFrame(flatten_results, columns=column_headings)
 # Standardize numerical variables
 X_scaled = StandardScaler().fit_transform(df[numerical_X_variables])
-scaled_df = pd.DataFrame(X_scaled, columns=numerical_X_variables)
+X_scaled_df = pd.DataFrame(X_scaled, columns=numerical_X_variables)
+Y_scaled = StandardScaler().fit_transform(df[Y_variables])
+Y_scaled_df = pd.DataFrame(Y_scaled, columns=Y_variables)
+
 # Convert categorical variables to dummy variables
 categorical_df = pd.get_dummies(df[categorical_X_variables])
 # Prepare dataframe for X and Y
-X = pd.concat([scaled_df, categorical_df], axis=1)
-X_without_shape = X.drop('Perimeter_to_area_ratio', axis=1)
-Y_growth = df[['Mean_growth']]
-Y_std = df[['Standard_deviation_growth']]
+X = pd.concat([X_scaled_df, categorical_df], axis=1)
+Y_growth = Y_scaled_df[['Mean_growth']]
+Y_std = Y_scaled_df[['Standard_deviation_growth']]
 
 # Regression without interaction terms
 model_growth = sm.OLS(Y_growth, sm.add_constant(X)).fit()
 model_std = sm.OLS(Y_std, sm.add_constant(X)).fit()
 
-# Regression with interaction terms
-interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=True)
+# Regression with 2nd order interaction terms
+interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=False)
 transform_X = interaction.fit_transform(X)
 interaction_terms = interaction.get_feature_names_out()
-X_interaction = pd.DataFrame(transform_X, columns=interaction_terms)
-model_growth_inter = sm.OLS(Y_growth, sm.add_constant(X_interaction)).fit()
-model_std_inter = sm.OLS(Y_std, sm.add_constant(X_interaction)).fit()
+X_interaction2 = pd.DataFrame(transform_X, columns=interaction_terms)
+model_growth_inter2 = sm.OLS(Y_growth, sm.add_constant(X_interaction2)).fit()
+model_std_inter2 = sm.OLS(Y_std, sm.add_constant(X_interaction2)).fit()
 
-# Regression with interaction terms, without considering shape
-interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=True)
-transform_X = interaction.fit_transform(X_without_shape)
+# Regression with 3rd order interaction terms
+interaction = PolynomialFeatures(degree=[3,3], include_bias=False, interaction_only=False)
+transform_X = interaction.fit_transform(X)
 interaction_terms = interaction.get_feature_names_out()
-X_interaction = pd.DataFrame(transform_X, columns=interaction_terms)
-model_growth_inter_no_shape = sm.OLS(Y_growth, sm.add_constant(X_interaction)).fit()
-model_std_inter_no_shape = sm.OLS(Y_std, sm.add_constant(X_interaction)).fit()
+X_interaction3 = pd.DataFrame(transform_X, columns=interaction_terms)
+model_growth_inter3 = sm.OLS(Y_growth, sm.add_constant(X_interaction3)).fit()
+model_std_inter3 = sm.OLS(Y_std, sm.add_constant(X_interaction3)).fit()
 
 dest_filename = abspath(join(THIS_DIR, '..', 'results', f'Multivariate_regression.csv'))
 with open(dest_filename, 'w') as f:
@@ -213,10 +216,10 @@ with open(dest_filename, 'w') as f:
     f.write('\n\n')
     f.write(model_std.summary().as_csv())
     f.write('\n\n')
-    f.write(model_growth_inter.summary().as_csv())
+    f.write(model_growth_inter2.summary().as_csv())
     f.write('\n\n')
-    f.write(model_std_inter.summary().as_csv())
+    f.write(model_std_inter2.summary().as_csv())
     f.write('\n\n')
-    f.write(model_growth_inter_no_shape.summary().as_csv())
+    f.write(model_growth_inter3.summary().as_csv())
     f.write('\n\n')
-    f.write(model_std_inter_no_shape.summary().as_csv())
+    f.write(model_std_inter3.summary().as_csv())
