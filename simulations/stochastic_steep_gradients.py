@@ -169,7 +169,7 @@ for distrib_name, v1 in results.items():
         dif = diffusion_type if diffusion_type else 'No diffusion'
         for shape_sim in v2:
             data = [j.objective_value for j in shape_sim['Simulation']]
-            if np.var(data) < 1e-05:
+            if np.var(data) > 1e-05:
                 data_entry = distrib + [dif]
                 data_entry.append(shape_sim['Perimeter-to-area ratio'])            
                 data_entry.append(np.mean(data))  
@@ -195,7 +195,7 @@ model_growth = sm.OLS(Y_growth, sm.add_constant(X)).fit()
 model_std = sm.OLS(Y_std, sm.add_constant(X)).fit()
 
 # Regression with 2nd order interaction terms
-interaction = PolynomialFeatures(degree=[2,2], include_bias=False, interaction_only=False)
+interaction = PolynomialFeatures(degree=2, include_bias=False, interaction_only=False)
 transform_X = interaction.fit_transform(X)
 interaction_terms = interaction.get_feature_names_out()
 X_interaction2 = pd.DataFrame(transform_X, columns=interaction_terms)
@@ -203,7 +203,7 @@ model_growth_inter2 = sm.OLS(Y_growth, sm.add_constant(X_interaction2)).fit()
 model_std_inter2 = sm.OLS(Y_std, sm.add_constant(X_interaction2)).fit()
 
 # Regression with 3rd order interaction terms
-interaction = PolynomialFeatures(degree=[3,3], include_bias=False, interaction_only=False)
+interaction = PolynomialFeatures(degree=3, include_bias=False, interaction_only=False)
 transform_X = interaction.fit_transform(X)
 interaction_terms = interaction.get_feature_names_out()
 X_interaction3 = pd.DataFrame(transform_X, columns=interaction_terms)
