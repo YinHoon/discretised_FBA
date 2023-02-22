@@ -155,3 +155,49 @@ for shape in CELL_SHAPES:
     dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{shape["ShapeID"]}.tiff'))
     fig.savefig(dest_figname, dpi=1200)
     
+# Plot coefficient of variation
+fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
+axes = axes.ravel()  # array to 1D
+fig.supylabel('Coefficient of variation')
+fig.supxlabel('Perimeter-to-area ratio')
+cv = lambda x: np.std(x, ddof=1) / np.mean(x) * 100
+
+for col, ax in zip(cols, axes):
+    for diff, colour in zip(sorted(results[col].keys()), colours):
+        value = results[col][diff]
+        diff_name = diff if diff else 'No diffusion'
+        ax.plot([i['Perimeter-to-area ratio'] for i in value], 
+            [cv([j.objective_value for j in i['Simulation']]) for i in value], 
+            colour, label=diff_name)
+    subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
+    ax.title.set_text(subplot_title)
+    ax.set_ylim([0, 15])    
+    line, label = ax.get_legend_handles_labels()
+fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
+fig.tight_layout()
+axes.flat[-1].set_visible(False)
+dest_figname = abspath(join(THIS_DIR, '..', 'results', 'cv.tiff'))
+fig.savefig(dest_figname, dpi=1200)
+
+# Plot standard deviation
+fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
+axes = axes.ravel()  # array to 1D
+fig.supylabel('Standard deviation')
+fig.supxlabel('Perimeter-to-area ratio')
+
+for col, ax in zip(cols, axes):
+    for diff, colour in zip(sorted(results[col].keys()), colours):
+        value = results[col][diff]
+        diff_name = diff if diff else 'No diffusion'
+        ax.plot([i['Perimeter-to-area ratio'] for i in value], 
+            [np.std([j.objective_value for j in i['Simulation']], ddof=1) for i in value], 
+            colour, label=diff_name)
+    subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
+    ax.title.set_text(subplot_title)
+    ax.set_ylim([0, 8])    
+    line, label = ax.get_legend_handles_labels()
+fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
+fig.tight_layout()
+axes.flat[-1].set_visible(False)
+dest_figname = abspath(join(THIS_DIR, '..', 'results', 'std.tiff'))
+fig.savefig(dest_figname, dpi=1200)
