@@ -176,7 +176,7 @@ def plot_kernel_density(results, model_name):
         fig.tight_layout()
         axes.flat[-1].set_visible(False)
         dest_figname = abspath(join(THIS_DIR, '..', 'results', 
-            f'{model_name}_{shape["ShapeID"]}.tiff'))
+            f'{model_name}_{shape["ShapeID"]}.eps'))
         fig.savefig(dest_figname, dpi=1200)
     
 
@@ -215,7 +215,7 @@ def plot_cv(results, model_name):
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
     axes.flat[-1].set_visible(False)
-    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_cv.tiff'))
+    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_cv.eps'))
     fig.savefig(dest_figname, dpi=1200)
 
 
@@ -253,7 +253,7 @@ def plot_std(results, model_name):
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
     axes.flat[-1].set_visible(False)
-    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_std.tiff'))
+    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_std.eps'))
     fig.savefig(dest_figname, dpi=1200)
 
 

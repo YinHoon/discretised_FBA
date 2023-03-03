@@ -134,7 +134,7 @@ for col, ax in zip(cols, axes):
 ax.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
 fig.tight_layout()
 
-dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_steep_gradients_line.tiff'))
+dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_steep_gradients_line.eps'))
 fig.savefig(dest_figname, dpi=1200)
 
 # Bar graph
@@ -169,7 +169,7 @@ plt.subplots_adjust(left=0.1,
                     wspace=0.4,
                     hspace=0.4)
 
-dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_steep_gradients_bar.tiff'))
+dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_steep_gradients_bar.eps'))
 fig.savefig(dest_figname, dpi=1200)
 
 plt.show()
