@@ -138,7 +138,7 @@ dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_g
 fig.savefig(dest_figname, dpi=1200)
 
 # Bar graph
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 6))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 4))
 #plt.setp(axes.flat, xlabel='X-label', ylabel='Y-label')
 pad = 5 # in points
 cols = ['A[c]', 'B[c]', 'No diffusion']
@@ -163,7 +163,7 @@ for row, shape in enumerate(rows):
         ax.title.set_text(diff_name)
 
 plt.subplots_adjust(left=0.1,
-                    bottom=0.5,
+                    bottom=0.3,
                     right=0.9,
                     top=0.9,
                     wspace=0.4,
