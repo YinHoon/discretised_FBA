@@ -274,6 +274,8 @@ if __name__ == '__main__':
     }
     model_name = 'A_limiting_model'
     results = simulation()
+    write_results(results, model_name)
+    plot_kernel_density(results, model_name)
     plot_cv(results, model_name)
     plot_std(results, model_name)
 
@@ -285,5 +287,7 @@ if __name__ == '__main__':
     }
     model_name = 'B_limiting_model'
     results = simulation()
+    write_results(results, model_name)
+    plot_kernel_density(results, model_name)
     plot_cv(results, model_name)
     plot_std(results, model_name)
