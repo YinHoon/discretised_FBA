@@ -125,7 +125,7 @@ for col, ax in zip(cols, axes):
         value = results[col][diff]
         diff_name = diff if diff else 'No diffusion'
         ax.plot([i['Perimeter-to-area ratio'] for i in value], 
-            [i['Simulation'].objective_value for i in value], colour, label=diff_name)
+            [i['Simulation'].objective_value for i in value], colour, label=diff_name, linewidth=3)
     subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
     ax.set_ylim([0, 120])  
     ax.title.set_text(subplot_title)

@@ -163,10 +163,10 @@ def plot_kernel_density(results, model_name):
                 data = [j.objective_value for i in value for j in i['Simulation'] \
                     if i['ShapeID']==shape['ShapeID']]
                 if np.var(data) < 1e-05:
-                    ax.axvline(np.mean(data), color=colour, label=diff_name)
+                    ax.axvline(np.mean(data), color=colour, label=diff_name, linewidth=2)
                 else:
                     sns.set_style('white')
-                    sns.kdeplot(data, ax=ax, color=colour, label=diff_name)
+                    sns.kdeplot(data, ax=ax, color=colour, label=diff_name, linewidth=2)
             subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
             ax.title.set_text(subplot_title)
             ax.set_ylim([0, 0.3])
@@ -207,7 +207,7 @@ def plot_cv(results, model_name):
             diff_name = diff if diff else 'No diffusion'
             ax.plot([i['Perimeter-to-area ratio'] for i in value], 
                 [cv([j.objective_value for j in i['Simulation']]) for i in value], 
-                colour, label=diff_name)
+                colour, label=diff_name, linewidth=3)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 15])    
@@ -245,7 +245,7 @@ def plot_std(results, model_name):
             diff_name = diff if diff else 'No diffusion'
             ax.plot([i['Perimeter-to-area ratio'] for i in value], 
                 [np.std([j.objective_value for j in i['Simulation']], ddof=1) for i in value], 
-                colour, label=diff_name)
+                colour, label=diff_name, linewidth=3)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 8])    
