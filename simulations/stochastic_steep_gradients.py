@@ -150,7 +150,7 @@ def plot_kernel_density(results, model_name):
             'steep_outside_in': '+',
             'random': 'r'}
     cols = results.keys()
-    colours = ['r', 'g', 'b', 'k']
+    colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
 
     for shape in CELL_SHAPES:
         fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
@@ -163,10 +163,10 @@ def plot_kernel_density(results, model_name):
                 data = [j.objective_value for i in value for j in i['Simulation'] \
                     if i['ShapeID']==shape['ShapeID']]
                 if np.var(data) < 1e-05:
-                    ax.axvline(np.mean(data), color=colour, label=diff_name, linewidth=2)
+                    ax.axvline(np.mean(data), color=colour, label=diff_name, linewidth=2, alpha=0.35)
                 else:
                     sns.set_style('white')
-                    sns.kdeplot(data, ax=ax, color=colour, label=diff_name, linewidth=2)
+                    sns.kdeplot(data, ax=ax, color=colour, label=diff_name, linewidth=2, alpha=0.35)
             subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
             ax.title.set_text(subplot_title)
             ax.set_ylim([0, 0.3])
@@ -176,7 +176,7 @@ def plot_kernel_density(results, model_name):
         fig.tight_layout()
         axes.flat[-1].set_visible(False)
         dest_figname = abspath(join(THIS_DIR, '..', 'results', 
-            f'{model_name}_{shape["ShapeID"]}.eps'))
+            f'{model_name}_{shape["ShapeID"]}.png'))
         fig.savefig(dest_figname, dpi=1200)
     
 
@@ -193,7 +193,7 @@ def plot_cv(results, model_name):
             'steep_outside_in': '+',
             'random': 'r'}
     cols = results.keys()
-    colours = ['r', 'g', 'b', 'k']
+    colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
     fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
     axes = axes.ravel()  # array to 1D
     fig.suptitle(model_name)
@@ -207,7 +207,7 @@ def plot_cv(results, model_name):
             diff_name = diff if diff else 'No diffusion'
             ax.plot([i['Perimeter-to-area ratio'] for i in value], 
                 [cv([j.objective_value for j in i['Simulation']]) for i in value], 
-                colour, label=diff_name, linewidth=3)
+                colour, label=diff_name, linewidth=3, alpha=0.35)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 15])    
@@ -215,7 +215,7 @@ def plot_cv(results, model_name):
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
     axes.flat[-1].set_visible(False)
-    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_cv.eps'))
+    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_cv.png'))
     fig.savefig(dest_figname, dpi=1200)
 
 
@@ -232,7 +232,7 @@ def plot_std(results, model_name):
             'steep_outside_in': '+',
             'random': 'r'}
     cols = results.keys()
-    colours = ['r', 'g', 'b', 'k']
+    colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
     fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
     axes = axes.ravel()  # array to 1D
     fig.suptitle(model_name)
@@ -245,7 +245,7 @@ def plot_std(results, model_name):
             diff_name = diff if diff else 'No diffusion'
             ax.plot([i['Perimeter-to-area ratio'] for i in value], 
                 [np.std([j.objective_value for j in i['Simulation']], ddof=1) for i in value], 
-                colour, label=diff_name, linewidth=3)
+                colour, label=diff_name, linewidth=3, alpha=0.35)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 8])    
@@ -253,7 +253,7 @@ def plot_std(results, model_name):
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
     axes.flat[-1].set_visible(False)
-    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_std.eps'))
+    dest_figname = abspath(join(THIS_DIR, '..', 'results', f'{model_name}_std.png'))
     fig.savefig(dest_figname, dpi=1200)
 
 

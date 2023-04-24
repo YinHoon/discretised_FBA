@@ -118,14 +118,14 @@ distribution_dictionary = {
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 6))
 axes = axes.ravel()  # array to 1D
 cols = results.keys()
-colours = ['r', 'g', 'b', 'k']
+colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
 
 for col, ax in zip(cols, axes):
     for diff, colour in zip(sorted(results[col].keys()), colours):
         value = results[col][diff]
         diff_name = diff if diff else 'No diffusion'
         ax.plot([i['Perimeter-to-area ratio'] for i in value], 
-            [i['Simulation'].objective_value for i in value], colour, label=diff_name, linewidth=3)
+            [i['Simulation'].objective_value for i in value], colour, label=diff_name, linewidth=3, alpha=0.35)
     subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
     ax.set_ylim([0, 120])  
     ax.title.set_text(subplot_title)
@@ -134,7 +134,7 @@ for col, ax in zip(cols, axes):
 ax.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
 fig.tight_layout()
 
-dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients_line.eps'))
+dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients_line.png'))
 fig.savefig(dest_figname, dpi=1200)
 
 # Bar graph
@@ -157,7 +157,7 @@ for row, shape in enumerate(rows):
         y = sorted(data.keys())
         x = ['\n'.join(data[i]) for i in y]
         ax = axes[col]
-        ax.bar(x, y, width=0.4)
+        ax.bar(x, y, width=0.4, color='cornflowerblue', alpha=0.35)
         ax.set_ylim([0, 120])  
         ax.set_ylabel('Biomass growth')
         ax.title.set_text(diff_name)
@@ -169,7 +169,7 @@ plt.subplots_adjust(left=0.1,
                     wspace=0.4,
                     hspace=0.4)
 
-dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients_bar.eps'))
+dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients_bar.png'))
 fig.savefig(dest_figname, dpi=1200)
 
 plt.show()
