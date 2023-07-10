@@ -151,22 +151,25 @@ def plot_kernel_density(results, model_name):
             'random': 'r'}
     cols = results.keys()
     colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
+    styles = ['dashed', 'solid', 'dashed', 'solid']
 
     for shape in CELL_SHAPES:
         fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
         axes = axes.ravel()  # array to 1D
         fig.suptitle(f'Cell geometry: {shape["ShapeID"]}')
         for col, ax in zip(cols, axes):
-            for diff, colour in zip(sorted(results[col].keys()), colours):
+            for diff, colour, style in zip(sorted(results[col].keys()), colours, styles):
                 value = results[col][diff]
                 diff_name = diff if diff else 'No diffusion'
                 data = [j.objective_value for i in value for j in i['Simulation'] \
                     if i['ShapeID']==shape['ShapeID']]
                 if np.var(data) < 1e-05:
-                    ax.axvline(np.mean(data), color=colour, label=diff_name, linewidth=2, alpha=0.35)
+                    ax.axvline(np.mean(data), color=colour, label=diff_name, linestyle=style, 
+                        linewidth=2, alpha=0.35)
                 else:
                     sns.set_style('white')
-                    sns.kdeplot(data, ax=ax, color=colour, label=diff_name, linewidth=2, alpha=0.35)
+                    sns.kdeplot(data, ax=ax, color=colour, label=diff_name, linestyle=style,
+                        linewidth=2, alpha=0.35)
             subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
             ax.title.set_text(subplot_title)
             ax.set_ylim([0, 0.3])
@@ -194,6 +197,7 @@ def plot_cv(results, model_name):
             'random': 'r'}
     cols = results.keys()
     colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
+    styles = ['dashed', 'solid', 'dashed', 'solid']
     fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
     axes = axes.ravel()  # array to 1D
     fig.suptitle(model_name)
@@ -202,12 +206,12 @@ def plot_cv(results, model_name):
     cv = lambda x: np.std(x, ddof=1) / np.mean(x) * 100
 
     for col, ax in zip(cols, axes):
-        for diff, colour in zip(sorted(results[col].keys()), colours):
+        for diff, colour, style in zip(sorted(results[col].keys()), colours, styles):
             value = results[col][diff]
             diff_name = diff if diff else 'No diffusion'
             ax.plot([i['Perimeter-to-area ratio'] for i in value], 
                 [cv([j.objective_value for j in i['Simulation']]) for i in value], 
-                colour, label=diff_name, linewidth=3, alpha=0.35)
+                colour, label=diff_name, linestyle=style, linewidth=3, alpha=0.35)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 15])    
@@ -233,6 +237,7 @@ def plot_std(results, model_name):
             'random': 'r'}
     cols = results.keys()
     colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
+    styles = ['dashed', 'solid', 'dashed', 'solid']
     fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(10, 6), sharey=True)
     axes = axes.ravel()  # array to 1D
     fig.suptitle(model_name)
@@ -240,12 +245,12 @@ def plot_std(results, model_name):
     fig.supxlabel('Perimeter-to-area ratio')
 
     for col, ax in zip(cols, axes):
-        for diff, colour in zip(sorted(results[col].keys()), colours):
+        for diff, colour, style in zip(sorted(results[col].keys()), colours, styles):
             value = results[col][diff]
             diff_name = diff if diff else 'No diffusion'
             ax.plot([i['Perimeter-to-area ratio'] for i in value], 
                 [np.std([j.objective_value for j in i['Simulation']], ddof=1) for i in value], 
-                colour, label=diff_name, linewidth=3, alpha=0.35)
+                colour, label=diff_name, linestyle=style, linewidth=3, alpha=0.35)
         subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
         ax.title.set_text(subplot_title)
         ax.set_ylim([0, 8])    

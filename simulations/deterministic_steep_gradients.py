@@ -119,13 +119,15 @@ fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 6))
 axes = axes.ravel()  # array to 1D
 cols = results.keys()
 colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
+styles = ['dashed', 'solid', 'dashed', 'solid']
 
 for col, ax in zip(cols, axes):
-    for diff, colour in zip(sorted(results[col].keys()), colours):
+    for diff, colour, style in zip(sorted(results[col].keys()), colours, styles):
         value = results[col][diff]
         diff_name = diff if diff else 'No diffusion'
         ax.plot([i['Perimeter-to-area ratio'] for i in value], 
-            [i['Simulation'].objective_value for i in value], colour, label=diff_name, linewidth=3, alpha=0.35)
+            [i['Simulation'].objective_value for i in value], colour, label=diff_name, 
+            linestyle=style, linewidth=3, alpha=0.35)
     subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
     ax.set_ylim([0, 120])  
     ax.title.set_text(subplot_title)
