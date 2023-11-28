@@ -52,7 +52,7 @@ class DiscretisedCell(object):
             pa_ratio = (2*(self.width + self.length) - 4) / (self.width*self.length)
         self.peri_to_area = pa_ratio
         
-        self.regions = np.empty((self.length, self.width), dtype=np.object)
+        self.regions = np.empty((self.length, self.width), dtype=object)
         self.model = cobra.Model()
         self.cell_level_reactions = {}
         for i in range(self.length):
