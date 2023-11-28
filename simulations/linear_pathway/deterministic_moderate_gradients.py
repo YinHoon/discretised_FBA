@@ -18,7 +18,7 @@ import sys
 
 # Find code directory relative to our directory
 THIS_DIR = dirname(__file__)
-CODE_DIR = abspath(join(THIS_DIR, '..', 'discretised_fba'))
+CODE_DIR = abspath(join(THIS_DIR, '..', '..', 'discretised_fba'))
 sys.path.append(CODE_DIR)
 from discretised_fba import DiscretisedCell
 
@@ -80,7 +80,7 @@ for diffusion in DIFFUSING_METABOLITES:
                 })
             
 # Write results to an excel file
-dest_filename = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients.xlsx'))
+dest_filename = abspath(join(THIS_DIR, '..', '..', 'results', 'deterministic_moderate_gradients.xlsx'))
 wb = Workbook()
 sheets = {}
 shape_properties = ['ShapeID', 'Aspect ratio', 'Perimeter-to-area ratio']
@@ -134,7 +134,7 @@ for col, ax in zip(cols, axes):
 ax.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
 fig.tight_layout()
 
-dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients_line.png'))
+dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 'deterministic_moderate_gradients_line.png'))
 fig.savefig(dest_figname, dpi=1200)
 
 # Bar graph
@@ -169,7 +169,7 @@ plt.subplots_adjust(left=0.1,
                     wspace=0.4,
                     hspace=0.4)
 
-dest_figname = abspath(join(THIS_DIR, '..', 'results', 'deterministic_moderate_gradients_bar.png'))
+dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 'deterministic_moderate_gradients_bar.png'))
 fig.savefig(dest_figname, dpi=1200)
 
 plt.show()
