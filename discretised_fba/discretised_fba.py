@@ -61,7 +61,7 @@ class DiscretisedCell(object):
                 self.regions[i, j] = new_region    
 
     def create_reactions(self, extra_mets, intra_mets, extra_rxns, intra_rxns, 
-            obj_rxn_id):
+            obj_func, obj_direction='max'):
         """ Create a Cobra model and add reactions to each region
 
         Args:
@@ -75,15 +75,18 @@ class DiscretisedCell(object):
             intra_rxns (:obj:`dict`): dictionary of reaction ID as key and reaction
                 string (e.g. '2 A --> B') as value, for reactions in the intracellular
                 space
-            obj_rxn_id (:obj:`str`): ID of objective reaction
+            obj_func (:obj:`dict`): ID of objective reaction as key and its coefficient 
+                as value
+            obj_direction (:obj:`str`, optional): 'max' (default) for maximising the objective
+                function and 'min' for minimising the objective function      
             
         Raises:
             :obj:`KeyError`: if objective reaction ID is not in the
                 extracellular, intracellular or transport reaction IDs            
         """
-        if obj_rxn_id not in list(intra_rxns.keys()):
-            raise KeyError(
-                'obj_rxn_id is not an existing reaction')
+        for obj_rxn_id in obj_func.keys():
+            if obj_rxn_id not in list(intra_rxns.keys()):
+                raise KeyError(f'{obj_rxn_id} is not an existing reaction')
         
         # create metabolites in the extracellular compartment
         metabolite_objs = []
@@ -127,11 +130,13 @@ class DiscretisedCell(object):
                     region_rxn.reaction = new_rxn_str
 
         # Set objective function
-        objective_reactions = [rxn.flux_expression for rxn in self.model.reactions 
-            if obj_rxn_id in rxn.id]
-        objective_function = self.model.problem.Objective(sum(objective_reactions),
-            direction='max')
-        self.model.objective = objective_function
+        objective_reactions = {}
+        for rxn in self.model.reactions:
+            for obj_rxn_id, coef in obj_func.items():
+                if obj_rxn_id in rxn.id:
+                    objective_reactions[rxn] = coef       
+        self.model.objective = objective_reactions
+        self.model.objective.direction = obj_direction
 
     def create_transport_reactions(self, intra_mets, extra_intra_rxns):
         """ Add nutrient transport reactions

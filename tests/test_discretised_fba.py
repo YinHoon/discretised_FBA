@@ -54,7 +54,7 @@ class CellTestCase(unittest.TestCase):
             'R_biomass': '2 B[c] --> Biomass[c]', # biomass reaction
             'R_biomass_ex': 'Biomass[c] -->  ' # biomass exchange reaction
             }
-        obj_rxn_id = 'R_biomass_ex'
+        obj_rxn_id = {'R_biomass_ex': 0.5, 'R_syn': -2}
 
         cell = DiscretisedCell('good_cell', 2, 1)
         cell.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
@@ -77,18 +77,20 @@ class CellTestCase(unittest.TestCase):
         self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)
         self.assertEqual(sorted(list(cell.regions[0,0].synthesis_reactions.keys())), sorted(intra_rxns))
         self.assertEqual(sorted(list(cell.regions[0,1].synthesis_reactions.keys())), sorted(intra_rxns))
-
-        self.assertEqual(str(cell.model.objective.expression), 
-            '1.0*R_biomass_ex_0,0 - 1.0*R_biomass_ex_0,0_reverse_db2c7 + ' +
-            '1.0*R_biomass_ex_0,1 - 1.0*R_biomass_ex_0,1_reverse_f5050')
+        print(str(cell.model.objective.expression))
+        self.assertEqual(str(cell.model.objective.expression),
+            '0.5*R_biomass_ex_0,0 - 0.5*R_biomass_ex_0,0_reverse_db2c7' +
+            ' + 0.5*R_biomass_ex_0,1 - 0.5*R_biomass_ex_0,1_reverse_f5050' +
+            ' - 2.0*R_syn_0,0 + 2.0*R_syn_0,0_reverse_6262c' +            
+            ' - 2.0*R_syn_0,1 + 2.0*R_syn_0,1_reverse_3445b')
 
         bad_cell1 = DiscretisedCell('bad_cell1', 1, 2)
-        obj_rxn_id = 'bad_obj_reaction'
+        obj_rxn_id = {'bad_obj_reaction': 1}
         with self.assertRaises(KeyError) as error:
             bad_cell1.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
                 obj_rxn_id)
             self.assertEqual(error.exception.message, 
-                'obj_rxn_id is not an existing reaction')        
+                'bad_obj_reaction is not an existing reaction')        
 
     def test_create_transport_reactions(self):
         intra_mets = ['A[c]']
@@ -237,7 +239,7 @@ class CellTestCase(unittest.TestCase):
             'R_biomass_ex': 'Biomass[c] -->  ' # biomass exchange reaction
             }
         extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'} 
-        obj_rxn_id = 'R_biomass_ex'
+        obj_rxn_id = {'R_biomass_ex':1.0}
         enzyme_rxn_assoc = {'R_syn': {'e1': 0.5,'e2': 1.0}, 'R_trans': {'e1': 0.2}}
 
         cell = DiscretisedCell('good_cell', 2, 1)
@@ -263,7 +265,7 @@ class CellTestCase(unittest.TestCase):
             'R_biomass_ex': 'Biomass[c] -->  ' # biomass exchange reaction
             }
         extra_intra_rxns = {'R_trans': 'A[e] --> A[c]'}    
-        obj_rxn_id = 'R_biomass_ex'
+        obj_rxn_id = {'R_biomass_ex': 1.0}
 
         cell = DiscretisedCell('good_cell', 4, 3)
         cell.create_reactions(extra_mets, intra_mets, extra_rxns, intra_rxns, 
@@ -295,7 +297,7 @@ class CellTestCase(unittest.TestCase):
     def test_solve(self):
         
         cell = DiscretisedCell('good_cell', 4, 3)
-        cell.create_reactions(['A[e]'], ['A[c]'], {'R_A_ex': ' --> A[e]'}, {'R_syn': 'A[c] --> '}, 'R_syn')
+        cell.create_reactions(['A[e]'], ['A[c]'], {'R_A_ex': ' --> A[e]'}, {'R_syn': 'A[c] --> '}, {'R_syn':1.0})
         cell.create_transport_reactions(['A[c]'], {'R_trans': 'A[e] --> A[c]'})
         rxn_bounds = {rxn.id: (0, 20.) for rxn in cell.model.reactions}
         cell.set_bounds(rxn_bounds)
