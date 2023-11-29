@@ -39,7 +39,7 @@ for diffusion in DIFFUSING_METABOLITES:
     for shape in CELL_SHAPES:
         cell = DiscretisedCell(shape['ShapeID'], shape['Width'], shape['Length'])
         cell.create_reactions(METABOLITES[0], METABOLITES[1:], EXCHANGE_REACTION,
-            INTRACELLULAR_REACTIONS, 'Biomass_reaction')
+            INTRACELLULAR_REACTIONS, {'Biomass_reaction': 1.0})
         cell.create_transport_reactions(['A[c]'], TRANSPORT_REACTION)
         cell.create_diffusion(diffusion)        
         
