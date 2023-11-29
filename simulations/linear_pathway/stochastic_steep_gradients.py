@@ -102,7 +102,7 @@ def write_results(results, model_name):
         results (:obj:`dict`): simulation results
         model_name (:obj:`str`): name of model
     """
-    dest_filename = abspath(join(THIS_DIR, '..', '..', 'results', 
+    dest_filename = abspath(join(THIS_DIR, '..', '..', 'results', 'linear_pathway',
         f'{model_name}_stochastic_steep_gradients.xlsx'))
     wb = Workbook()
     sheets = {}
@@ -178,7 +178,7 @@ def plot_kernel_density(results, model_name):
         fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
         fig.tight_layout()
         axes.flat[-1].set_visible(False)
-        dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 
+        dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 'linear_pathway',
             f'{model_name}_{shape["ShapeID"]}.png'))
         fig.savefig(dest_figname, dpi=1200)
     
@@ -219,7 +219,8 @@ def plot_cv(results, model_name):
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
     axes.flat[-1].set_visible(False)
-    dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', f'{model_name}_cv.png'))
+    dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 'linear_pathway',
+        f'{model_name}_cv.png'))
     fig.savefig(dest_figname, dpi=1200)
 
 
@@ -258,7 +259,8 @@ def plot_std(results, model_name):
     fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
     fig.tight_layout()
     axes.flat[-1].set_visible(False)
-    dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', f'{model_name}_std.png'))
+    dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 'linear_pathway',
+        f'{model_name}_std.png'))
     fig.savefig(dest_figname, dpi=1200)
 
 
