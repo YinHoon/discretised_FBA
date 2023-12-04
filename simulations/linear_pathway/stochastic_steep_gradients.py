@@ -9,14 +9,12 @@
 from model import *
 from openpyxl import Workbook
 from os.path import dirname, abspath, join
-from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 import collections
 import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import statsmodels.api as sm
 import sys
 
 # Find code directory relative to our directory
