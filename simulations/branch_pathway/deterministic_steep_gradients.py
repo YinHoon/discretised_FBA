@@ -235,8 +235,8 @@ for row, shape in enumerate(rows):
         x = ['\n'.join(data1[i]) for i in y1]
         ax = axes[col]
         ax2 = ax.twinx()
-        ax.bar(x, y1, width=-0.4, color='cornflowerblue', alpha=0.35, align='edge')
-        ax2.bar(x, y2, width=0.4, color='crimson', alpha=0.35, align='edge')
+        left = ax.bar(x, y1, width=-0.4, color='cornflowerblue', alpha=0.35, align='edge')
+        right = ax2.bar(x, y2, width=0.4, color='crimson', alpha=0.35, align='edge')
         ax.set_ylim([0, 450])
         ax2.set_ylim([0, 1.0])
         ax.tick_params(axis='x', labelsize=7)
@@ -244,6 +244,7 @@ for row, shape in enumerate(rows):
 
 fig.supylabel(x=0.03, y=0.6, t='Total energy produced', size=11)
 fig.text(x=0.94, y=0.6, s='Secondary-to-primary flux ratio\n\n', size=11, rotation=270, ha='center', va='center')
+fig.legend([left, right], ['Total energy', 'Flux ratio'], loc='upper center', bbox_to_anchor=(0.5, 0.85))
 plt.subplots_adjust(left=0.1,
                     bottom=0.3,
                     right=0.9,
