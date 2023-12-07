@@ -134,6 +134,30 @@ colours = ['crimson', 'seagreen', 'cornflowerblue', 'orange']
 styles = ['dashed', 'solid', 'dashed', 'solid']  
 cols = results.keys()      
 
+# line graph for objective value
+fig, axes = plt.subplots(nrows=4, ncols=7, figsize=(10, 6), sharey=True)
+axes = axes.ravel()  # array to 1D
+fig.supylabel('Objective value')
+fig.supxlabel('Perimeter-to-area ratio')
+
+for col, ax in zip(cols, axes):
+    for diff, colour, style in zip(sorted(results[col].keys()), colours, styles):
+        value = results[col][diff]
+        diff_name = diff if diff else 'No diffusion'   
+        ax.plot([i['Perimeter-to-area ratio'] for i in value], 
+            [i['Simulation'].objective_value for i in value], colour, label=diff_name, 
+            linestyle=style, linewidth=3, alpha=0.35)
+    subplot_title = ''.join([distribution_dictionary[i] for i in col.split(',')])
+    ax.set_ylim([100, 450])  
+    ax.title.set_text(subplot_title)
+    line, label = ax.get_legend_handles_labels()
+fig.legend(line, label, loc='lower right', bbox_to_anchor=(1.0, 0.))
+fig.tight_layout()
+axes.flat[-1].set_visible(False)
+dest_figname = abspath(join(THIS_DIR, '..', '..', 'results', 'branch_pathway', 
+    'deterministic_steep_gradients_objective.png'))
+fig.savefig(dest_figname, dpi=1200)
+
 # line graph for total energy produced
 fig, axes = plt.subplots(nrows=4, ncols=7, figsize=(10, 6), sharey=True)
 axes = axes.ravel()  # array to 1D
