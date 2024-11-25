@@ -77,7 +77,6 @@ class CellTestCase(unittest.TestCase):
         self.assertDictEqual({i.id: i.reaction for i in cell.model.reactions}, test_reactions)
         self.assertEqual(sorted(list(cell.regions[0,0].synthesis_reactions.keys())), sorted(intra_rxns))
         self.assertEqual(sorted(list(cell.regions[0,1].synthesis_reactions.keys())), sorted(intra_rxns))
-        print(str(cell.model.objective.expression))
         self.assertEqual(str(cell.model.objective.expression),
             '0.5*R_biomass_ex_0,0 - 0.5*R_biomass_ex_0,0_reverse_db2c7' +
             ' + 0.5*R_biomass_ex_0,1 - 0.5*R_biomass_ex_0,1_reverse_f5050' +
