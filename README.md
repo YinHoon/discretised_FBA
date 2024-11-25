@@ -10,4 +10,4 @@ The method uses **COBRApy** and **numpy**.
 
 If you use this method, please cite the following:
 
-*Chew YH, Spill F. 2023. Discretised Flux Balance Analysis for Reaction-Diffusion Simulation of Single-Cell Metabolism. bioRxiv doi: [10.1101/2023.08.01.551453](https://doi.org/10.1101/2023.08.01.551453)*
+*Chew, Y.H., Spill, F. Discretised Flux Balance Analysis for Reaction–Diffusion Simulation of Single-Cell Metabolism. Bull Math Biol 86, 39 (2024). doi: [10.1101/2023.08.01.551453](https://doi.org/10.1007/s11538-024-01264-6)*
